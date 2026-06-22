@@ -50,6 +50,8 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-cybersec}:${POSTGRES_PASSWORD:-cybersec}@postgres:5432/${POSTGRES_DB:-cybersec}
       REDIS_URL: redis://redis:6379/0
+      FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
+      RELOAD: "true"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -73,10 +75,6 @@ services:
     depends_on:
       - backend
 
-  # Isolated execution environment for untrusted repo content. Not part of the
-  # default stack since it's meant to be spawned per scan, not run as a daemon
-  # (see DESIGN.md). Invoke on demand, e.g.:
-  #   docker compose --profile sandbox run --rm sandbox
   sandbox:
     build:
       context: ./backend/sandbox
