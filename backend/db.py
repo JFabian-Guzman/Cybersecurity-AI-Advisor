@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -25,5 +25,5 @@ def check_database() -> dict[str, object]:
     return {
         "database": "ok",
         "select_1": result,
-        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "checked_at": datetime.now(UTC).isoformat(),
     }
