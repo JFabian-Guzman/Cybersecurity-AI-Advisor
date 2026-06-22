@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+backend/dist/
+backend/build/
+
+# Node (frontend keeps its own .gitignore; these cover the root too)
+node_modules/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Docker
+*.pid
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
