@@ -13,5 +13,5 @@
 
 
 ## Default Versions
-- Default React version: 19.2.7
+- Default React version: 19.2.6
 - Default Python version: 3.14

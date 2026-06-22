@@ -226,7 +226,7 @@ erDiagram
 
 | Architectural driver                                                                                    | Tech                                                                             |
 | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| One image for web+worker, RAG-dominant                                                                  | **Python 3.12+**                                                                 |
+| One image for web+worker, RAG-dominant                                                                  | **Python 3.14+**                                                                 |
 | Stateless API tier validating *adversarial* input, needs OpenAPI                                        | **FastAPI** (alt: Litestar)                                                      |
 | System of record + owner-scoping + vectors + delete-on-request must purge findings, chunks & embeddings | **PostgreSQL + pgvector**                                                        |
 | Long scans must not block HTTP; rate-limit/quota store needed                                           | **Redis + RQ** (or arq)                                                          |
