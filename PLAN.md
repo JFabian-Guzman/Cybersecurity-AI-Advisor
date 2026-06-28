@@ -18,7 +18,7 @@ Adds secret detection, scan-diffing, the login UI, observability, deployment pol
 - As a developer, I want the repository initialized with GitFlow branches and branch protection rules so the team has a consistent workflow.
 - As a developer, I want to define and document our code standards so that both developers write consistent, maintainable code from the start.
 - As a developer, I want to define the technologies we will use so the team agrees on a consistent stack before development starts and can document the decision in an ADR.
-- As a developer, I want a docker-compose setup with the defined technologies (e.g. Postgres, Redis, FastAPI, Next.js) skeletons so both services run locally with one command.
+- As a developer, I want a docker-compose setup with the defined technologies (e.g. Postgres, Redis, FastAPI, React + Vite) skeletons so both services run locally with one command.
 - As a developer, I want CI configured to run lint, tests, and a secret scan on every PR so code quality and hygiene are enforced automatically.
 - As a developer, I want an ADR template and a first ADR documenting our stack and branching choices so decisions are traceable.
 - As a developer, I want a working "hello world" round trip (frontend → backend → database) so the environment is verified end-to-end.
