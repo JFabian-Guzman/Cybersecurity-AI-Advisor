@@ -27,7 +27,7 @@ services:
     name: cybersec-frontend
     runtime: static
     rootDir: frontend
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
     staticPublishPath: ./dist
     autoDeploy: false
     envVars:
