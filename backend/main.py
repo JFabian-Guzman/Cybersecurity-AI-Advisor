@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 import uvicorn
@@ -5,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import check_database
+from routers import repositories, scans
 
 app = FastAPI(title="CyberSecurity Advisor API")
 
@@ -16,6 +19,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(repositories.router)
+app.include_router(scans.router)
 
 
 @app.get("/api/health")
