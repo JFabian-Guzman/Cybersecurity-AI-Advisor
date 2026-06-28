@@ -27,7 +27,7 @@ def run_scan(scan_id: uuid.UUID) -> None:
             log.info("job.scan_running", scan_id=str(scan_id))
 
             # ToDo: stub — Dev B's analyze(repo_path) will replace this
-            findings = []
+            findings: list[str] = []
 
             scan.status = "succeeded"
             scan.finished_at = datetime.now(UTC)
