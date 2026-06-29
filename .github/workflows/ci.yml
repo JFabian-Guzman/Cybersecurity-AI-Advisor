@@ -20,6 +20,34 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      DATABASE_URL: postgresql+psycopg://cybersec:cybersec@localhost:5432/cybersec
+      REDIS_URL: redis://localhost:6379/0
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: cybersec
+          POSTGRES_PASSWORD: cybersec
+          POSTGRES_DB: cybersec
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:8.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v8.1.0
@@ -30,6 +58,8 @@ jobs:
       - run: uv run ruff check .
       - run: uv run black --check .
       - run: uv run mypy .
+      - run: uv run alembic upgrade head
+      - run: uv run python seed.py
       - run: uv run pytest
 
   frontend:
