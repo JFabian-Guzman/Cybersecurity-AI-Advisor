@@ -1,0 +1,8 @@
+FROM python:3.14-slim
+
+ARG API_KEY=sk-1234567890abcdef1234567890abcdef
+ENV DATABASE_PASSWORD=SuperSecretPassw0rd!
+
+USER 1000
+
+CMD ["python", "app.py"]

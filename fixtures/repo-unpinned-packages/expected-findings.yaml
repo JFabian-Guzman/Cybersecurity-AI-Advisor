@@ -1,0 +1,17 @@
+findings:
+  - rule_id:  DF005
+    severity: MEDIUM
+    file:     Dockerfile
+    line:     3
+    message: >
+      Package "curl" installed via apt-get without a version pin. Pin exact
+      versions (e.g. curl=7.88.1-10) so builds are reproducible and not
+      silently upgraded to a vulnerable release.
+  - rule_id:  DF005
+    severity: MEDIUM
+    file:     Dockerfile
+    line:     4
+    message: >
+      Package "requests" installed via pip without a version pin. Pin exact
+      versions (e.g. requests==2.31.0) so builds are reproducible and not
+      silently upgraded to a vulnerable release.
