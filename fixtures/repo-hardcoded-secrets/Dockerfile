@@ -1,6 +1,6 @@
 FROM python:3.14-slim
 
-ARG API_KEY=sk-1234567890abcdef1234567890abcdef
+ARG API_KEY=sk-1234567890abcdef1234567890abcdef # gitleaks:allow
 ENV DATABASE_PASSWORD=SuperSecretPassw0rd!
 
 USER 1000
