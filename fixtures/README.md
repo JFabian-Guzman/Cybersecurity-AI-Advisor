@@ -9,23 +9,28 @@ fixtures/
 │
 ├── repo-root-user/              # DF001 — container runs as root
 │   ├── Dockerfile
-│   └── expected-findings.yaml
+│   ├── expected-findings.yaml
+│   └── url.md                   # (optional) Real-world repo reference
 │
 ├── repo-latest-tag/             # DF002 — base image pinned to :latest
 │   ├── Dockerfile
-│   └── expected-findings.yaml
+│   ├── expected-findings.yaml
+│   └── url.md                   # (optional) Real-world repo reference
 │
 ├── repo-hardcoded-secrets/      # DF003 — secrets in ENV / ARG
 │   ├── Dockerfile
-│   └── expected-findings.yaml
+│   ├── expected-findings.yaml
+│   └── url.md                   # (optional) Real-world repo reference
 │
 ├── repo-add-remote-url/         # DF004 — ADD fetches a remote URL
 │   ├── Dockerfile
-│   └── expected-findings.yaml
+│   ├── expected-findings.yaml
+│   └── url.md                   # (optional) Real-world repo reference
 │
 └── repo-unpinned-packages/      # DF005 — packages installed without version pins
     ├── Dockerfile
-    └── expected-findings.yaml
+    ├── expected-findings.yaml
+    └── url.md                   # (optional) Real-world repo reference
 ```
 
 Each fixture repo maps to exactly one primary rule so that detector unit tests
@@ -55,6 +60,27 @@ The detector is expected to return objects with these exact five fields.
 The eval harness compares detector output against `expected-findings.yaml`
 matching on `(rule_id, file, line)` — the `message` field is not compared
 for equality but must be non-empty.
+
+---
+
+## Real-world repo references (url.md)
+
+Each fixture may include a `url.md` file referencing real open-source
+repositories whose code exhibits the same vulnerability class. These are
+intended for integration / end-to-end tests that validate the detector
+against real-world code (not just minimal fixtures).
+
+The file uses a Markdown table with the following columns:
+
+| Column | Description |
+|--------|-------------|
+| Repo | Link to the GitHub repository |
+| Reason | What vulnerability it demonstrates and why it matches the fixture |
+
+Clone URLs (HTTPS and SSH) are listed below the table when available.
+
+A fixture may omit `url.md` entirely if no suitable real-world repository
+has been identified yet.
 
 ---
 
