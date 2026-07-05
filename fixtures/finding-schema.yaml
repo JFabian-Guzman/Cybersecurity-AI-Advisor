@@ -1,0 +1,49 @@
+# Canonical schema for detector Finding objects.
+#
+# Every detector must emit findings with exactly these five fields. The eval
+# harness matches detector output against each fixture's expected-findings.yaml
+# on (rule_id, file, line); `message` is only checked for non-emptiness.
+# See README.md for the full fixture layout and conventions.
+
+fields:
+  rule_id:
+    type: string
+    description: Rule identifier, e.g. DF001.
+  severity:
+    type: enum
+    values: [CRITICAL, HIGH, MEDIUM, LOW, INFO]
+    description: Impact of the finding if left unaddressed.
+  file:
+    type: string
+    description: Repo-relative path to the affected file.
+  line:
+    type: [int, "null"]
+    description: 1-based line number; null for whole-file findings.
+  message:
+    type: string
+    description: Human-readable explanation plus a remediation hint.
+
+severity_guide:
+  CRITICAL: Exploitable secret or credential exposure; immediate compromise risk.
+  HIGH: Direct security weakening, e.g. running as root or fetching unverified remote content.
+  MEDIUM: Hardening gap that increases blast radius but isn't directly exploitable.
+  LOW: Best-practice deviation with minimal direct security impact.
+  INFO: Informational note; no action required.
+
+# Rule catalogue (S1.7 — 5 checks). Keep in sync with README.md's table.
+rules:
+  - id: DF001
+    severity: HIGH
+    description: No USER directive — container runs as root.
+  - id: DF002
+    severity: MEDIUM
+    description: Base image uses :latest tag or is untagged.
+  - id: DF003
+    severity: CRITICAL
+    description: Hardcoded secret in ENV or ARG default value.
+  - id: DF004
+    severity: HIGH
+    description: ADD used to fetch a remote URL.
+  - id: DF005
+    severity: MEDIUM
+    description: Package install (apt-get, pip, npm, etc.) without version pinning.
