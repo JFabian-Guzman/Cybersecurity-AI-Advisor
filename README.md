@@ -93,44 +93,6 @@ pnpm dev
 
 Opens at http://localhost:5173 with HMR.
 
----
-
-### Useful commands
-
-**Backend** (run from `backend/`):
-
-| Command | Purpose |
-|---|---|
-| `uv sync --frozen` | Install dependencies |
-| `uv run ruff check .` | Lint |
-| `uv run black --check .` | Format check |
-| `uv run mypy .` | Type check |
-| `uv run pytest` | Run all tests |
-
-**Frontend** (run from `frontend/`):
-
-| Command | Purpose |
-|---|---|
-| `pnpm install --frozen-lockfile` | Install dependencies |
-| `pnpm dev` | Dev server with HMR |
-| `pnpm lint` | Lint |
-| `pnpm typecheck` | TypeScript check |
-| `pnpm build` | Production build |
-
----
-
-### Environment variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `POSTGRES_USER` | `cybersec` | Postgres user |
-| `POSTGRES_PASSWORD` | `cybersec` | Postgres password |
-| `POSTGRES_DB` | `cybersec` | Postgres database name |
-| `POSTGRES_PORT` | `5433` | Host-mapped Postgres port |
-| `BACKEND_PORT` | `8000` | Backend listen port |
-| `FRONTEND_PORT` | `5173` | Frontend dev-server port |
-| `DATABASE_URL` | *(from .env)* | SQLAlchemy connection string |
-| `VITE_API_URL` | `http://localhost:8000` | Backend URL for the frontend |
 
 ## Architecture Diagram
 
