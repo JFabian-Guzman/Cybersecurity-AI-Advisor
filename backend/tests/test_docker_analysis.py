@@ -4,9 +4,11 @@ from pathlib import Path
 
 from analysis.docker import inspect_files
 
+
 def _write_dockerfile(tmp_path: Path, content: str, name: str = "Dockerfile") -> str:
     (tmp_path / name).write_text(content)
     return str(tmp_path)
+
 
 def test_inspect_files_empty_path() -> None:
     assert inspect_files("/tmp/nonexistent-path-12345") == []
