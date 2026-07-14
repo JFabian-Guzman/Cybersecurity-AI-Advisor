@@ -65,6 +65,7 @@ class Finding(Base):
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     line_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     message: Mapped[str] = mapped_column(Text, nullable=False)
+    remediation: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     scan: Mapped[Scan] = relationship(back_populates="findings")
