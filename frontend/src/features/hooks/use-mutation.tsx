@@ -8,4 +8,3 @@ export function useConnectRepositoryMutation(onConnected: (scanId: string) => vo
     onSuccess: (data) => onConnected(data.scan_id),
   })
 }
-

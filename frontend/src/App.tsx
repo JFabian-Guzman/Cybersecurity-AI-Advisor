@@ -69,7 +69,11 @@ function App() {
             )}
           </CardHeader>
           <CardContent>
-            {scanId ? <ScanStatus scanId={scanId} /> : <ConnectRepositoryForm onConnected={handleConnected} />}
+            {scanId ? (
+              <ScanStatus scanId={scanId} />
+            ) : (
+              <ConnectRepositoryForm onConnected={handleConnected} />
+            )}
           </CardContent>
         </Card>
       </main>

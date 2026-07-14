@@ -6,7 +6,6 @@ interface ScanStatusProps {
 }
 
 export function ScanStatus({ scanId }: ScanStatusProps) {
-  
   const { data, isLoading, isError, error } = useScanQuery(scanId)
 
   if (isLoading) return <p className="text-sm text-[#94A3B8]">Checking scan status…</p>

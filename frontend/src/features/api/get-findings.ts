@@ -7,7 +7,6 @@ export async function getFindings(scanId: string): Promise<Finding[]> {
   return data
 }
 
-
 export const useFindingsQuery = (scanId: string) => {
   return useQuery({
     queryKey: ['findings', scanId],
