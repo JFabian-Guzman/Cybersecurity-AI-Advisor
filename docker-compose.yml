@@ -98,7 +98,9 @@ services:
 
   sandbox:
     build:
-      context: ./backend/sandbox
+      context: ./backend
+      dockerfile: sandbox/Dockerfile
+    image: cybersecurity-ai-advisor-sandbox
     profiles: ["sandbox"]
     network_mode: none
     read_only: true
