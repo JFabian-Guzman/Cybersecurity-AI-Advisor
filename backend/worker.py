@@ -4,7 +4,7 @@ import os
 
 import structlog
 from redis import Redis
-from rq import Queue, Worker
+from rq import Queue, SimpleWorker
 
 log = structlog.get_logger()
 
@@ -20,5 +20,5 @@ def get_queue(redis: Redis | None = None) -> Queue:
 if __name__ == "__main__":
     redis = get_redis()
     queue = get_queue(redis)
-    log.info("worker.starting", queues=["scans"])
-    Worker([queue], connection=redis).work()
+    log.info("SimpleWorker.starting", queues=["scans"])
+    SimpleWorker([queue], connection=redis).work()

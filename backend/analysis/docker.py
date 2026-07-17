@@ -33,6 +33,7 @@ class Finding:
     file: str
     line: int | None
     message: str
+    remediation: str
 
 
 def _is_dockerfile(name: str) -> bool:
@@ -93,10 +94,8 @@ def _check_user(path: str, lines: list[str]) -> list[Finding]:
             severity="HIGH",
             file=path,
             line=None,
-            message=(
-                "No USER directive found — the container runs as root by default. Add a "
-                "USER directive with a non-root user before CMD/ENTRYPOINT."
-            ),
+            message="No USER directive found — the container runs as root by default.",
+            remediation="Add a USER directive with a non-root user before CMD/ENTRYPOINT.",
         )
     ]
 
@@ -133,17 +132,22 @@ def _check_tags(path: str, lines: list[str]) -> list[Finding]:
             tag = last_segment.rsplit(":", 1)[-1]
             if tag != "latest":
                 continue
-            message = (
-                f'Base image "{image_ref}" uses a mutable tag. Pin to an explicit version '
-                "(and ideally a digest) for reproducible, auditable builds."
-            )
+            message = f'Base image "{image_ref}" uses a mutable tag.'
         else:
-            message = (
-                f'Base image "{image_ref}" has no tag (defaults to :latest). Pin to an '
-                "explicit version (and ideally a digest) for reproducible, auditable builds."
-            )
+            message = f'Base image "{image_ref}" has no tag (defaults to :latest).'
 
-        findings.append(Finding(rule_id="DF002", severity="MEDIUM", file=path, line=line_no, message=message))
+        remediation = "Pin to an explicit version (and ideally a digest) for reproducible, auditable builds."
+
+        findings.append(
+            Finding(
+                rule_id="DF002",
+                severity="MEDIUM",
+                file=path,
+                line=line_no,
+                message=message,
+                remediation=remediation,
+            )
+        )
 
     return findings
 
@@ -202,7 +206,8 @@ def _check_secrets(path: str, lines: list[str]) -> list[Finding]:
                     severity="CRITICAL",
                     file=path,
                     line=line_no,
-                    message=f"Hardcoded secret detected in {source} ({name}). {remediation}",
+                    message=f"Hardcoded secret detected in {source} ({name}).",
+                    remediation=remediation,
                 )
             )
 
@@ -227,10 +232,10 @@ def _check_remote_url(path: str, lines: list[str]) -> list[Finding]:
                     severity="HIGH",
                     file=path,
                     line=line_no,
-                    message=(
-                        f"ADD fetches a remote URL ({src}). Remote content is unverified "
-                        "at build time; use COPY with a vetted local artifact, or curl "
-                        "plus checksum verification in a RUN step instead."
+                    message=f"ADD fetches a remote URL ({src}).",
+                    remediation=(
+                        "Remote content is unverified at build time; use COPY with a vetted "
+                        "local artifact, or curl plus checksum verification in a RUN step instead."
                     ),
                 )
             )
@@ -259,10 +264,10 @@ def _pinning_finding(path: str, line_no: int, package: str, manager: str) -> Fin
         severity="MEDIUM",
         file=path,
         line=line_no,
-        message=(
-            f'Package "{package}" installed via {manager} without a version pin. Pin an '
-            f"exact version (e.g. {package}{operator}<version>) so builds are reproducible "
-            "and not silently upgraded to a vulnerable release."
+        message=f'Package "{package}" installed via {manager} without a version pin.',
+        remediation=(
+            f"Pin an exact version (e.g. {package}{operator}<version>) so builds are "
+            "reproducible and not silently upgraded to a vulnerable release."
         ),
     )
 
