@@ -4,7 +4,7 @@ import uuid
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.orm import Session
 
@@ -78,46 +78,11 @@ def connect_repository(
     )
 
 
-@router.post("/upload", response_model=RepositoryResponse, status_code=201)
-def upload_repository(
-    file: UploadFile,
-    name: str,
-    session: Annotated[Session, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> RepositoryResponse:
-    if file.filename is None or not file.filename.endswith((".zip", ".tar.gz", ".tar")):
-        raise HTTPException(status_code=400, detail="Only .zip and .tar.gz archives are supported")
-
-    upload_key = f"uploads/{uuid.uuid4()}/{file.filename}"
-
-    repo = Repository(
-        user_id=current_user.id,
-        name=name,
-        source_type="upload",
-        source_ref=upload_key,
-    )
-    session.add(repo)
-    session.flush()
-
-    scan = Scan(
-        repository_id=repo.id,
-        user_id=current_user.id,
-        status="queued",
-    )
-    session.add(scan)
-    session.commit()
-    session.refresh(repo)
-    session.refresh(scan)
-
-    get_queue().enqueue(run_scan, scan.id)
-    log.info("repository.uploaded", repo_id=str(repo.id), scan_id=str(scan.id))
-
-    return RepositoryResponse(
-        id=repo.id,
-        name=repo.name,
-        source_type=repo.source_type,
-        source_ref=repo.source_ref,
-        scan_id=scan.id,
+@router.post("/upload", status_code=501)
+def upload_repository() -> None:
+    raise HTTPException(
+        status_code=501,
+        detail=("Archive upload is not implemented yet. " "Connect a public Git repository URL instead."),
     )
 
 
