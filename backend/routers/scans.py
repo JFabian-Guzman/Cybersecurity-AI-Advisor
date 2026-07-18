@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from dependencies import get_current_user, get_db
-from models import Finding, Scan, User
+from models import Finding, Report, Scan, User
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
 
@@ -35,6 +35,17 @@ class FindingResponse(BaseModel):
     line_number: int | None
     message: str
     remediation: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ReportResponse(BaseModel):
+    scan_id: uuid.UUID
+    total_findings: int
+    severity_counts: dict[str, int]
+    rule_counts: dict[str, int]
+    category_counts: dict[str, int]
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -87,3 +98,31 @@ def get_scan_findings(
         )
         for f in findings
     ]
+
+
+@router.get("/{scan_id}/report", response_model=ReportResponse)
+def get_scan_report(
+    scan_id: uuid.UUID,
+    session: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> ReportResponse:
+    scan = _get_owned_scan(scan_id, session, current_user)
+
+    if scan.status != "succeeded":
+        raise HTTPException(
+            status_code=409,
+            detail=f"Report is not available while the scan is {scan.status}",
+        )
+
+    report = session.query(Report).filter(Report.scan_id == scan.id).first()
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    return ReportResponse(
+        scan_id=report.scan_id,
+        total_findings=report.total_findings,
+        severity_counts=report.severity_counts,
+        rule_counts=report.rule_counts,
+        category_counts=report.category_counts,
+        created_at=report.created_at,
+    )
