@@ -1,14 +1,17 @@
 import os
 from datetime import UTC, datetime
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+
+load_dotenv()
 
 
 def _normalized_database_url() -> str:
     url = os.getenv(
         "DATABASE_URL",
-        "postgresql+psycopg://cybersec:cybersec@localhost:5432/cybersec",
+        "postgresql+psycopg://cybersec:cybersec@localhost:5433/cybersec",
     )
     for prefix in ("postgresql://", "postgres://"):
         if url.startswith(prefix):
