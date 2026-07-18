@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import os
 import shutil
+import stat
 import subprocess
+from collections.abc import Callable
 
 
 class CloneError(RuntimeError):
     pass
+
+
+def _clear_readonly_and_retry(func: Callable[[str], None], path: str, _exc: BaseException) -> None:
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 
 def clone_repo(url: str, dest_dir: str, timeout_seconds: int, max_clone_mb: int) -> None:
@@ -32,8 +39,8 @@ def clone_repo(url: str, dest_dir: str, timeout_seconds: int, max_clone_mb: int)
         raise CloneError(f"Clone timed out after {timeout_seconds}s") from exc
     except subprocess.CalledProcessError as exc:
         raise CloneError(f"git clone failed: {exc.stderr.strip()}") from exc
-    # Deletes the .git directory after the checkout is complete
-    shutil.rmtree(os.path.join(dest_dir, ".git"), ignore_errors=True)
+
+    shutil.rmtree(os.path.join(dest_dir, ".git"), onexc=_clear_readonly_and_retry)
 
     total_size = sum(
         os.path.getsize(os.path.join(dirpath, f))
