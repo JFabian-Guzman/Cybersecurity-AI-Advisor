@@ -22,7 +22,13 @@ SANDBOX_IMAGE = os.getenv("SANDBOX_IMAGE", "cybersecurity-ai-advisor-sandbox")
 SANDBOX_TIMEOUT = int(os.getenv("SANDBOX_TIMEOUT_SECONDS", "120"))
 SANDBOX_MAX_CLONE_MB = int(os.getenv("SANDBOX_MAX_CLONE_MB", "500"))
 
-_SEVERITY_MAP = {"CRITICAL": "high", "HIGH": "high", "MEDIUM": "medium", "LOW": "low", "INFO": "low"}
+_SEVERITY_MAP = {
+    "CRITICAL": "critical",
+    "HIGH": "high",
+    "MEDIUM": "medium",
+    "LOW": "low",
+    "INFO": "info",
+}
 
 
 def _run_sandbox(repo_dir: str) -> list[dict]:
@@ -90,6 +96,7 @@ def run_scan(scan_id: uuid.UUID) -> None:
                         line_number=item["line"],
                         message=item["message"],
                         remediation=item["remediation"],
+                        category=item.get("category", "docker"),
                     )
                 )
 
