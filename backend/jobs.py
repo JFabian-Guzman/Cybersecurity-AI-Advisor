@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from db import engine
 from ingestion.clone import clone_repo
 from models import Finding, Scan
+from reporting.generate import generate_report
 
 log = structlog.get_logger()
 
@@ -99,6 +100,9 @@ def run_scan(scan_id: uuid.UUID) -> None:
                         category=item.get("category", "docker"),
                     )
                 )
+
+            session.flush()
+            generate_report(session, scan)
 
             scan.status = "succeeded"
             scan.finished_at = datetime.now(UTC)
