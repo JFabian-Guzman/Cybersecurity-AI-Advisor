@@ -36,3 +36,16 @@ def test_connect_repository_invalid_url() -> None:
 def test_get_scan_not_found() -> None:
     response = client.get("/api/scans/00000000-0000-0000-0000-000000000999")
     assert response.status_code == 404
+
+
+def test_upload_repository_is_rejected() -> None:
+    response = client.post("/api/repositories/upload")
+    assert response.status_code == 501
+    assert "not implemented" in response.json()["detail"].lower()
+
+
+def test_upload_repository_creates_no_records() -> None:
+    before = len(client.get("/api/repositories").json())
+    client.post("/api/repositories/upload")
+    after = len(client.get("/api/repositories").json())
+    assert before == after
