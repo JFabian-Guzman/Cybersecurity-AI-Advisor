@@ -63,6 +63,27 @@ services:
       redis:
         condition: service_healthy
 
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: uv run python worker.py
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-cybersec}:${POSTGRES_PASSWORD:-cybersec}@postgres:5432/${POSTGRES_DB:-cybersec}
+      REDIS_URL: redis://redis:6379/0
+      SANDBOX_IMAGE: cybersecurity-ai-advisor-sandbox
+      SANDBOX_TIMEOUT_SECONDS: "120"
+      SANDBOX_MAX_CLONE_MB: "500"
+    volumes:
+      - ./backend:/app
+      - backend_venv:/app/.venv
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   frontend:
     build:
       context: ./frontend
@@ -77,7 +98,9 @@ services:
 
   sandbox:
     build:
-      context: ./backend/sandbox
+      context: ./backend
+      dockerfile: sandbox/Dockerfile
+    image: cybersecurity-ai-advisor-sandbox
     profiles: ["sandbox"]
     network_mode: none
     read_only: true

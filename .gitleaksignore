@@ -1,0 +1,2 @@
+# Intentionally vulnerable test fixtures — not real secrets
+90b81100c938e7f85eeeaf357c78a46fa4d068c5:fixtures/repo-hardcoded-secrets/Dockerfile:generic-api-key:3

@@ -14,3 +14,4 @@ that supersedes the old one rather than editing history.
 ## Index
 
 - [0001 - Technology stack and branching strategy](0001-technology-stack-and-branching-strategy.md)
+- [0002 - Sandbox isolation mechanism](0002-sandbox-isolation-mechanism.md)

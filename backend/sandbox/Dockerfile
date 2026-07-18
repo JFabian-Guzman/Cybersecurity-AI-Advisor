@@ -3,8 +3,9 @@ FROM python:3.12-slim
 RUN useradd --no-create-home --shell /usr/sbin/nologin sandbox
 
 WORKDIR /sandbox
-COPY . .
+COPY analysis ./analysis
+COPY sandbox/entrypoint.py .
 
 USER sandbox
 
-ENTRYPOINT ["python", "-c", "print('sandbox skeleton: no detectors wired up yet')"]
+ENTRYPOINT ["python", "entrypoint.py"]
