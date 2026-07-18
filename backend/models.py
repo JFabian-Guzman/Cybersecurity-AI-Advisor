@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -52,6 +52,7 @@ class Scan(Base):
 
     repository: Mapped[Repository] = relationship(back_populates="scans")
     findings: Mapped[list[Finding]] = relationship(back_populates="scan")
+    report: Mapped[Report | None] = relationship(back_populates="scan", uselist=False)
 
 
 class Finding(Base):
@@ -61,11 +62,33 @@ class Finding(Base):
     scan_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("scans.id"), nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     rule_id: Mapped[str] = mapped_column(String(64), nullable=False)
-    severity: Mapped[str] = mapped_column(Enum("high", "medium", "low", name="severity_enum"), nullable=False)
+    severity: Mapped[str] = mapped_column(
+        Enum("critical", "high", "medium", "low", "info", name="severity_enum"), nullable=False
+    )
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     line_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     remediation: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[str] = mapped_column(String(32), nullable=False, server_default="docker")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     scan: Mapped[Scan] = relationship(back_populates="findings")
+
+
+class Report(Base):
+    __tablename__ = "reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scan_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("scans.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    severity_counts: Mapped[dict[str, int]] = mapped_column(JSONB, nullable=False)
+    rule_counts: Mapped[dict[str, int]] = mapped_column(JSONB, nullable=False)
+    category_counts: Mapped[dict[str, int]] = mapped_column(JSONB, nullable=False)
+    total_findings: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+
+    scan: Mapped[Scan] = relationship(back_populates="report")
