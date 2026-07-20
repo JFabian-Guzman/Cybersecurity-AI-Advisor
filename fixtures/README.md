@@ -116,10 +116,10 @@ has been identified yet.
    comment at the top of the `Dockerfile`.
 
 5. **Run the eval harness** to confirm all labels pass before opening a PR:
-   ```bash
-   # TBD — command will be documented once the harness is implemented (S1.5 follow-up)
-   pytest tests/eval/ -v
-   ```
+```bash
+   cd backend
+   uv run pytest tests/eval -v
+```
 
 ---
 
