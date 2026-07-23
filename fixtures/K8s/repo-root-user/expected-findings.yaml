@@ -1,0 +1,10 @@
+findings:
+  - rule_id:  K8S005
+    severity: MEDIUM
+    file:     deployment.yaml
+    line:     16
+    message: >
+      Container 'app' does not set securityContext.runAsNonRoot: true, so
+      it may run as root inside the container if the image itself doesn't
+      drop privileges. Set runAsNonRoot: true (and a non-zero runAsUser) to
+      enforce non-root execution.
