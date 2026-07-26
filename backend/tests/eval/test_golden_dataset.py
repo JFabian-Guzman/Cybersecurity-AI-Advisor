@@ -8,16 +8,17 @@ import pytest
 import yaml
 
 from analysis.docker import Finding, inspect_files
+from analysis.k8s import inspect_files as inspect_k8s_files
 
 FIXTURES_ROOT = Path(__file__).resolve().parents[3] / "fixtures"
 
 # Category = the fixture's top-level parent dir under fixtures/ (Docker, K8s, ...).
 # A category with no analyzer registered yet has its fixtures skipped rather than
 # failed, so new golden-dataset fixtures can land ahead of the detector that
-# implements them (see fixtures/K8s — Sprint 2 / S2.1).
+# implements them.
 CATEGORY_ANALYZERS: dict[str, tuple[Callable[[str], list[Finding]], ...]] = {
     "Docker": (inspect_files,),
-    # "K8s": (kubernetes.analyze,)  # once backend/analysis/kubernetes.py lands (S2.1)
+    "K8s": (inspect_k8s_files,),
 }
 
 

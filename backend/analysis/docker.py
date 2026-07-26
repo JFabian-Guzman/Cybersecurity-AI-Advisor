@@ -4,13 +4,15 @@ import os
 import os.path
 import re
 from collections.abc import Iterator
-from dataclasses import dataclass
+
+from analysis.common import Finding
 
 _SECRET_KEY_PATTERN = re.compile(r"(KEY|SECRET|PASSWORD|PASSWD|TOKEN|CREDENTIAL)", re.IGNORECASE)
 _REMOTE_URL_PATTERN = re.compile(r"^(https?|ftp)://", re.IGNORECASE)
 _VAR_REF_PATTERN = re.compile(r"^\$")
-_INSTRUCTION_PATTERN = re.compile(r"^([A-Za-z]+)\s*(.*)$")
 _FROM_PATTERN = re.compile(r"^(\S+)(?:\s+AS\s+(\S+))?", re.IGNORECASE)
+_INSTRUCTION_PATTERN = re.compile(r"^([A-Za-z]+)\s*(.*)$")
+
 
 # Package manager pinning syntax
 _PIN_OPERATOR = {
@@ -26,21 +28,7 @@ _PIN_OPERATOR = {
 }
 
 
-@dataclass
-class Finding:
-    rule_id: str
-    severity: str
-    file: str
-    line: int | None
-    message: str
-    remediation: str
-
-
-def _is_dockerfile(name: str) -> bool:
-    return name == "Dockerfile" or name.lower().endswith(".dockerfile")
-
-
-def _iter_instructions(lines: list[str]) -> Iterator[tuple[int, str, str]]:
+def iter_instructions(lines: list[str]) -> Iterator[tuple[int, str, str]]:
     buffer: list[str] = []
     start_line: int | None = None
 
@@ -73,6 +61,10 @@ def _iter_instructions(lines: list[str]) -> Iterator[tuple[int, str, str]]:
         start_line = None
 
 
+def _is_dockerfile(name: str) -> bool:
+    return name == "Dockerfile" or name.lower().endswith(".dockerfile")
+
+
 def _analyze_dockerfile(path: str, lines: list[str]) -> list[Finding]:
     findings: list[Finding] = []
     findings.extend(_check_user(path, lines))
@@ -84,7 +76,7 @@ def _analyze_dockerfile(path: str, lines: list[str]) -> list[Finding]:
 
 
 def _check_user(path: str, lines: list[str]) -> list[Finding]:
-    for _line_no, keyword, _content in _iter_instructions(lines):
+    for _line_no, keyword, _content in iter_instructions(lines):
         if keyword == "USER":
             return []
 
@@ -104,7 +96,7 @@ def _check_tags(path: str, lines: list[str]) -> list[Finding]:
     findings: list[Finding] = []
     stage_names: set[str] = set()
 
-    for line_no, keyword, content in _iter_instructions(lines):
+    for line_no, keyword, content in iter_instructions(lines):
         if keyword != "FROM":
             continue
 
@@ -175,7 +167,7 @@ def _parse_key_values(content: str) -> list[tuple[str, str]]:
 def _check_secrets(path: str, lines: list[str]) -> list[Finding]:
     findings: list[Finding] = []
 
-    for line_no, keyword, content in _iter_instructions(lines):
+    for line_no, keyword, content in iter_instructions(lines):
         if keyword not in ("ARG", "ENV"):
             continue
 
@@ -217,7 +209,7 @@ def _check_secrets(path: str, lines: list[str]) -> list[Finding]:
 def _check_remote_url(path: str, lines: list[str]) -> list[Finding]:
     findings: list[Finding] = []
 
-    for line_no, keyword, content in _iter_instructions(lines):
+    for line_no, keyword, content in iter_instructions(lines):
         if keyword != "ADD":
             continue
 
@@ -312,7 +304,7 @@ def _check_segment_pinning(tokens: list[str], path: str, line_no: int) -> list[F
 def _check_version_pinning(path: str, lines: list[str]) -> list[Finding]:
     findings: list[Finding] = []
 
-    for line_no, keyword, content in _iter_instructions(lines):
+    for line_no, keyword, content in iter_instructions(lines):
         if keyword != "RUN":
             continue
 
