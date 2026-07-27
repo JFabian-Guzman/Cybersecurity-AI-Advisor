@@ -2,7 +2,23 @@ from __future__ import annotations
 
 import os
 import os.path
+import re
 from dataclasses import dataclass, field
+
+_K8S_WORKLOAD_KINDS = {"Pod", "Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job", "CronJob"}
+_KIND_PATTERN = re.compile(r"^kind:\s*(\S+)", re.MULTILINE)
+_CONTENT_SNIFF_BYTES = 8192
+
+
+def _content_suggests_kubernetes(full_path: str) -> bool:
+    try:
+        with open(full_path, encoding="utf-8", errors="replace") as fh:
+            head = fh.read(_CONTENT_SNIFF_BYTES)
+    except OSError:
+        return False
+
+    match = _KIND_PATTERN.search(head)
+    return match is not None and match.group(1) in _K8S_WORKLOAD_KINDS
 
 
 def classify_file(path: str) -> str:
@@ -19,6 +35,7 @@ def classify_file(path: str) -> str:
         return "terraform"
 
     if ext in (".yaml", ".yml"):
+        # First check if the file is in a directory that suggests Kubernetes manifests
         for part in parts[:-1]:
             if part in ("k8s", "kubernetes", "manifests"):
                 return "kubernetes"
@@ -112,7 +129,14 @@ def inspect_repo(repo_path: str) -> RepoManifest:
             full_path = os.path.join(dirpath, f)
             relative_path = os.path.relpath(full_path, repo_path)
             relative_path = relative_path.replace("\\", "/")
-            files.append(FileEntry(path=relative_path, category=classify_file(relative_path)))
+
+            category = classify_file(relative_path)
+            ext = os.path.splitext(f)[1].lower()
+            # Double check for Kubernetes manifests in case the file is not in a directory that suggests Kubernetes
+            if category == "config" and ext in (".yaml", ".yml") and _content_suggests_kubernetes(full_path):
+                category = "kubernetes"
+
+            files.append(FileEntry(path=relative_path, category=category))
 
     files.sort(key=lambda x: x.path)
     project_types = _detect_project_types(files)

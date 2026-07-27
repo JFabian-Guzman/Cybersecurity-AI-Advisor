@@ -13,6 +13,7 @@ from docker.errors import DockerException
 from sqlalchemy.orm import Session
 
 from db import engine
+from ingestion.classify import inspect_repo
 from ingestion.clone import clone_repo
 from models import Finding, Scan
 from reporting.generate import generate_report
@@ -31,14 +32,17 @@ _SEVERITY_MAP = {
     "INFO": "info",
 }
 
+_ANALYZER_CATEGORIES = ("docker", "kubernetes")
 
-def _run_sandbox(repo_dir: str) -> list[dict]:
+
+def _run_sandbox(repo_dir: str, analyzers: list[str]) -> list[dict]:
     client = docker.from_env()
     container = None
     try:
         container = client.containers.create(
             image=SANDBOX_IMAGE,
             volumes={repo_dir: {"bind": "/repo", "mode": "ro"}},
+            environment={"ANALYZERS": ",".join(analyzers)},
             network_mode="none",
             read_only=True,
             tmpfs={"/tmp": "size=512m"},
@@ -84,7 +88,10 @@ def run_scan(scan_id: uuid.UUID) -> None:
                 raise RuntimeError(f"Unsupported source type for scanning: {repo.source_type}")
 
             clone_repo(repo.source_ref, tmp_dir, timeout_seconds=SANDBOX_TIMEOUT, max_clone_mb=SANDBOX_MAX_CLONE_MB)
-            raw_findings = _run_sandbox(tmp_dir)
+
+            manifest = inspect_repo(tmp_dir)
+            analyzers = [c for c in _ANALYZER_CATEGORIES if c in manifest.project_types]
+            raw_findings = _run_sandbox(tmp_dir, analyzers)
 
             for item in raw_findings:
                 session.add(

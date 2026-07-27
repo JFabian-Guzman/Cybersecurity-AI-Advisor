@@ -2,49 +2,53 @@
 
 ## Directory layout
 
+Fixtures are grouped by analyzer category, each with its own
+`finding-schema.yaml`:
+
 ```
 fixtures/
-├── finding-schema.yaml          # Canonical Finding field definitions & severity guide
 ├── README.md                    # This file
 │
-├── repo-root-user/              # DF001 — container runs as root
-│   ├── Dockerfile
-│   ├── expected-findings.yaml
-│   └── url.md                   # (optional) Real-world repo reference
+├── Docker/
+│   ├── finding-schema.yaml      # Canonical Finding field definitions & severity guide (Docker)
+│   ├── repo-root-user/          # DF001 — container runs as root
+│   │   ├── Dockerfile
+│   │   ├── expected-findings.yaml
+│   │   └── url.md               # (optional) Real-world repo reference
+│   ├── repo-latest-tag/         # DF002 — base image pinned to :latest
+│   ├── repo-hardcoded-secrets/  # DF003 — secrets in ENV / ARG
+│   ├── repo-add-remote-url/     # DF004 — ADD fetches a remote URL
+│   └── repo-unpinned-packages/  # DF005 — packages installed without version pins
 │
-├── repo-latest-tag/             # DF002 — base image pinned to :latest
-│   ├── Dockerfile
-│   ├── expected-findings.yaml
-│   └── url.md                   # (optional) Real-world repo reference
-│
-├── repo-hardcoded-secrets/      # DF003 — secrets in ENV / ARG
-│   ├── Dockerfile
-│   ├── expected-findings.yaml
-│   └── url.md                   # (optional) Real-world repo reference
-│
-├── repo-add-remote-url/         # DF004 — ADD fetches a remote URL
-│   ├── Dockerfile
-│   ├── expected-findings.yaml
-│   └── url.md                   # (optional) Real-world repo reference
-│
-└── repo-unpinned-packages/      # DF005 — packages installed without version pins
-    ├── Dockerfile
-    ├── expected-findings.yaml
-    └── url.md                   # (optional) Real-world repo reference
+└── K8s/
+    ├── finding-schema.yaml      # Canonical Finding field definitions & severity guide (Kubernetes)
+    ├── repo-privileged/         # K8S001 — privileged container
+    │   ├── deployment.yaml
+    │   ├── service.yaml
+    │   ├── expected-findings.yaml
+    │   └── url.md               # (optional) Real-world repo reference
+    ├── repo-hostnetwork/        # K8S002 — hostNetwork/hostPID/hostIPC
+    ├── repo-missing-limits/     # K8S003 — missing resource requests/limits
+    ├── repo-privilege-escalation/ # K8S004 — allowPrivilegeEscalation not false
+    └── repo-root-user/          # K8S005 — missing runAsNonRoot
 ```
 
 Each fixture repo maps to exactly one primary rule so that detector unit tests
 can assert a single, unambiguous expected output.  A fixture may carry
 *multiple findings* when the same rule fires on several lines (e.g.
-`repo-hardcoded-secrets` has two DF003 hits, `repo-add-remote-url` has two
-DF004 hits).
+`Docker/repo-hardcoded-secrets` has two DF003 hits, `Docker/repo-add-remote-url`
+has two DF004 hits). K8s fixtures additionally carry a `service.yaml` — a
+plain `Service` manifest with no pod spec — to prove the detector doesn't
+false-positive on non-workload manifests sitting in the same repo.
 
 ---
 
 ## Finding format
 
-All `expected-findings.yaml` files use the schema defined in
-[`finding-schema.yaml`](./finding-schema.yaml).
+All `expected-findings.yaml` files use the schema defined in that category's
+`finding-schema.yaml` (e.g. [`Docker/finding-schema.yaml`](./Docker/finding-schema.yaml),
+[`K8s/finding-schema.yaml`](./K8s/finding-schema.yaml)) — identical five-field
+shape across categories, only the `rules:` catalogue differs.
 
 ```yaml
 findings:
@@ -84,7 +88,9 @@ has been identified yet.
 
 ---
 
-## Rule catalogue (S1.7 — 5 checks)
+## Rule catalogue
+
+### Docker (S1.7 — 5 checks)
 
 | Rule ID | Severity | Description |
 |---------|----------|-------------|
@@ -94,26 +100,38 @@ has been identified yet.
 | DF004 | HIGH | `ADD` used to fetch a remote URL |
 | DF005 | MEDIUM | Package install (`apt-get`, `pip`, `npm`, etc.) without version pinning |
 
+### Kubernetes (S2.1 — 5 checks)
+
+| Rule ID | Severity | Description |
+|---------|----------|-------------|
+| K8S001 | HIGH | Privileged container (`securityContext.privileged: true`) |
+| K8S002 | HIGH | `hostNetwork`, `hostPID`, or `hostIPC` set to `true` |
+| K8S003 | MEDIUM | Container missing resource `requests`/`limits` (cpu and/or memory) |
+| K8S004 | HIGH | `allowPrivilegeEscalation` not explicitly set to `false` |
+| K8S005 | MEDIUM | Container missing `runAsNonRoot: true` |
+
 ---
 
 ## How to add a new fixture case
 
-1. **Create a new subdirectory** under `fixtures/` with a descriptive name
+1. **Create a new subdirectory** under the relevant category
+   (`fixtures/Docker/` or `fixtures/K8s/`) with a descriptive name
    (e.g. `repo-privileged-mode` for a future DF006 check).
 
-2. **Add the vulnerable file(s)** — typically a `Dockerfile`, but can also be
-   a Kubernetes manifest, Terraform file, etc. as the detector surface grows.
+2. **Add the vulnerable file(s)** — a `Dockerfile` under `Docker/`, a
+   Kubernetes manifest under `K8s/`, or a Terraform file if/when that
+   category is added.
 
-3. **Write `expected-findings.yaml`** following the schema in
-   `finding-schema.yaml`.  Every finding that the detector *should* emit must
-   be listed.  Do **not** list findings the detector should *ignore* — the
-   harness treats any unlisted finding emitted by the detector as a false
-   positive.
+3. **Write `expected-findings.yaml`** following the schema in that
+   category's `finding-schema.yaml`.  Every finding that the detector
+   *should* emit must be listed.  Do **not** list findings the detector
+   should *ignore* — the harness treats any unlisted finding emitted by the
+   detector as a false positive.
 
 4. **Keep each fixture focused** — one primary rule per fixture directory.
    If you need to test rule interaction, create a dedicated
    `repo-combined-<ruleA>-<ruleB>/` fixture and document the intent in a
-   comment at the top of the `Dockerfile`.
+   comment at the top of the vulnerable file.
 
 5. **Run the eval harness** to confirm all labels pass before opening a PR:
 ```bash
@@ -125,10 +143,18 @@ has been identified yet.
 
 ## Conventions
 
-- Dockerfiles are minimal — only the lines needed to trigger (or not trigger)
-  the rule under test.  Avoid adding realistic application code that might
-  accidentally trigger *other* rules and pollute the expected-findings list.
+- Fixture files are minimal — only the lines needed to trigger (or not
+  trigger) the rule under test.  Avoid adding realistic application code
+  that might accidentally trigger *other* rules and pollute the
+  expected-findings list.
 - Line numbers in `expected-findings.yaml` must stay in sync with the
-  `Dockerfile`.  If you edit a Dockerfile, re-check every `line:` value.
+  fixture file.  If you edit it, re-check every `line:` value.
 - Use `line: null` only for **whole-file** findings where no single line can
-  be cited (currently only DF001 — missing USER).
+  be cited (currently only DF001 — missing USER). For findings caused by a
+  *missing* key where a containing block still exists (e.g. K8S003/004/005 —
+  a container missing `resources`, `allowPrivilegeEscalation`, or
+  `runAsNonRoot`), anchor on the container's `- name: <container>` line
+  instead of `null`, so the finding still points somewhere actionable.
+- K8s fixtures pair each vulnerable manifest with a deliberately compliant
+  `service.yaml` to confirm the detector doesn't false-positive on
+  non-workload manifests in the same repo.

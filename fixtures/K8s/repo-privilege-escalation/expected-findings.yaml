@@ -1,0 +1,10 @@
+findings:
+  - rule_id:  K8S004
+    severity: HIGH
+    file:     deployment.yaml
+    line:     16
+    message: >
+      Container 'app' does not explicitly set
+      securityContext.allowPrivilegeEscalation: false, so a process inside
+      it may still gain more privileges than its parent (e.g. via setuid
+      binaries). Explicitly set allowPrivilegeEscalation: false.
