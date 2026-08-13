@@ -5,7 +5,7 @@ import os.path
 import re
 from dataclasses import dataclass, field
 
-_K8S_WORKLOAD_KINDS = {"Pod", "Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job", "CronJob"}
+_K8S_WORKLOAD_KINDS = {"Pod", "Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job", "CronJob", "Service", "Ingress", "ConfigMap", "Secret", "PersistentVolumeClaim", "Namespace"}
 _KIND_PATTERN = re.compile(r"^kind:\s*(\S+)", re.MULTILINE)
 _CONTENT_SNIFF_BYTES = 8192
 
@@ -24,7 +24,6 @@ def _content_suggests_kubernetes(full_path: str) -> bool:
 def classify_file(path: str) -> str:
     name = os.path.basename(path)
     ext = os.path.splitext(name)[1].lower()
-    parts = path.replace("\\", "/").split("/")
 
     if name == "Dockerfile" or ext == ".dockerfile":
         return "docker"
@@ -35,10 +34,8 @@ def classify_file(path: str) -> str:
         return "terraform"
 
     if ext in (".yaml", ".yml"):
-        # First check if the file is in a directory that suggests Kubernetes manifests
-        for part in parts[:-1]:
-            if part in ("k8s", "kubernetes", "manifests"):
-                return "kubernetes"
+        if _content_suggests_kubernetes(path):
+            return "kubernetes"
         return "config"
 
     if ext == ".py":
@@ -74,7 +71,6 @@ class RepoManifest:
 
 def _detect_project_types(files: list[FileEntry]) -> list[str]:
     types: list[str] = []
-    seen = set()
 
     categories = {f.category for f in files}
     names = {os.path.basename(f.path) for f in files}
@@ -82,23 +78,18 @@ def _detect_project_types(files: list[FileEntry]) -> list[str]:
 
     if "docker" in categories:
         types.append("docker")
-        seen.add("docker")
 
     if "terraform" in categories:
         types.append("terraform")
-        seen.add("terraform")
 
     if "kubernetes" in categories:
         types.append("kubernetes")
-        seen.add("kubernetes")
 
     if "python" in categories:
         types.append("python")
-        seen.add("python")
 
     if "javascript" in categories:
         types.append("node")
-        seen.add("node")
 
     if "secret" in categories:
         types.append("secret")
@@ -107,16 +98,12 @@ def _detect_project_types(files: list[FileEntry]) -> list[str]:
         types.append("ci")
 
     if "pyproject.toml" in names or "requirements.txt" in names or "setup.py" in names:
-        if "python" not in seen:
-            types.append("python")
-            seen.add("python")
+        types.append("python")
 
     if "package.json" in names:
-        if "node" not in seen:
-            types.append("node")
-            seen.add("node")
+        types.append("node")
 
-    return types
+    return list(dict.fromkeys(types))
 
 
 def inspect_repo(repo_path: str) -> RepoManifest:
@@ -131,10 +118,6 @@ def inspect_repo(repo_path: str) -> RepoManifest:
             relative_path = relative_path.replace("\\", "/")
 
             category = classify_file(relative_path)
-            ext = os.path.splitext(f)[1].lower()
-            # Double check for Kubernetes manifests in case the file is not in a directory that suggests Kubernetes
-            if category == "config" and ext in (".yaml", ".yml") and _content_suggests_kubernetes(full_path):
-                category = "kubernetes"
 
             files.append(FileEntry(path=relative_path, category=category))
 
