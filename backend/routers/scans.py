@@ -31,6 +31,7 @@ class FindingResponse(BaseModel):
     scan_id: uuid.UUID
     rule_id: str
     severity: str
+    category: str
     file_path: str
     line_number: int | None
     message: str
@@ -90,6 +91,7 @@ def get_scan_findings(
             scan_id=f.scan_id,
             rule_id=f.rule_id,
             severity=f.severity,
+            category=f.category,
             file_path=f.file_path,
             line_number=f.line_number,
             message=f.message,
