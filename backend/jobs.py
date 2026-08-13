@@ -13,7 +13,6 @@ from docker.errors import DockerException
 from sqlalchemy.orm import Session
 
 from db import engine
-from ingestion.classify import inspect_repo
 from ingestion.clone import clone_repo
 from models import Finding, Scan
 from reporting.generate import generate_report
@@ -58,6 +57,7 @@ def _run_sandbox(repo_dir: str, analyzers: list[str]) -> list[dict]:
             stderr = container.logs(stdout=False, stderr=True).decode()
             raise RuntimeError(f"Sandbox exited with code {result.get('StatusCode')}: {stderr}")
         output = container.logs(stdout=True, stderr=False).decode()
+        log.info("sandbox_output", output=output)
         return json.loads(output)
     except DockerException as exc:
         raise RuntimeError(f"Failed to run sandbox container: {exc}") from exc
@@ -89,9 +89,9 @@ def run_scan(scan_id: uuid.UUID) -> None:
 
             clone_repo(repo.source_ref, tmp_dir, timeout_seconds=SANDBOX_TIMEOUT, max_clone_mb=SANDBOX_MAX_CLONE_MB)
 
-            manifest = inspect_repo(tmp_dir)
-            analyzers = [c for c in _ANALYZER_CATEGORIES if c in manifest.project_types]
+            analyzers = list(_ANALYZER_CATEGORIES)
             raw_findings = _run_sandbox(tmp_dir, analyzers)
+            log.info("analyzers", analyzers=analyzers)
 
             for item in raw_findings:
                 session.add(
