@@ -1,4 +1,5 @@
 import { FindingsByFile } from './FindingsByFile'
+import { ReportSummary } from './ReportSummary'
 import { useScanQuery } from '../api/get-scan'
 
 interface ScanStatusProps {
@@ -25,5 +26,10 @@ export function ScanStatus({ scanId }: ScanStatusProps) {
     return <p className="text-sm text-[#EF4444]">Scan failed: {data.error ?? 'Unknown error'}</p>
   }
 
-  return <FindingsByFile scanId={scanId} />
+  return (
+    <div className="flex flex-col gap-4">
+      <ReportSummary scanId={scanId} />
+      <FindingsByFile scanId={scanId} />
+    </div>
+  )
 }
