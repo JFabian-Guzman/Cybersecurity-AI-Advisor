@@ -5,7 +5,6 @@ export interface ConnectedRepository {
   name: string
   source_type: string
   source_ref: string
-  scan_id: string
 }
 
 export async function connectRepository(url: string, name: string): Promise<ConnectedRepository> {
