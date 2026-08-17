@@ -5,22 +5,26 @@ import uuid
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from db import engine
-from dependencies import STUB_USER_ID
-from main import app
-from models import Finding, Scan
-from reporting.generate import generate_report
+from app.db.db import engine
+from app.dependencies import STUB_USER_ID
+from app.main import app
+from app.models import Finding, Scan
+from app.reporting.generate import generate_report
 
 client = TestClient(app)
 
 
 def _create_scan() -> str:
-    response = client.post(
+    connect_response = client.post(
         "/api/repositories",
         json={"url": "https://github.com/example/repo", "name": "test-repo"},
     )
-    assert response.status_code == 201
-    return str(response.json()["scan_id"])
+    assert connect_response.status_code == 201
+    repository_id = connect_response.json()["id"]
+
+    scan_response = client.post("/api/scans", json={"repository_id": repository_id})
+    assert scan_response.status_code == 201
+    return str(scan_response.json()["id"])
 
 
 def test_get_scan_findings_not_found() -> None:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from analysis.k8s import inspect_files
+from app.analysis.k8s import inspect_files
 
 _BASE_DEPLOYMENT = """\
 apiVersion: apps/v1

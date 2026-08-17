@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ingestion.clone import clone_repo
+from app.ingestion.clone import clone_repo
 
 CLONE_TIMEOUT_SECONDS = 60
 CLONE_MAX_MB = 100

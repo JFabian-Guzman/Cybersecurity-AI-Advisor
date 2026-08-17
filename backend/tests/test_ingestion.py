@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ingestion.classify import inspect_repo
+from app.ingestion.classify import inspect_repo
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent.parent / "fixtures"
 DOCKER_FIXTURES_DIR = FIXTURES_DIR / "Docker"

@@ -7,21 +7,25 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-import jobs
-from db import engine
-from main import app
-from models import Scan
+import app.jobs as jobs
+from app.db.db import engine
+from app.main import app
+from app.models import Scan
 
 client = TestClient(app)
 
 
 def _create_scan() -> uuid.UUID:
-    response = client.post(
+    connect_response = client.post(
         "/api/repositories",
         json={"url": "https://github.com/example/repo", "name": "test-repo"},
     )
-    assert response.status_code == 201
-    return uuid.UUID(response.json()["scan_id"])
+    assert connect_response.status_code == 201
+    repository_id = connect_response.json()["id"]
+
+    scan_response = client.post(f"/api/repositories/{repository_id}/scans")
+    assert scan_response.status_code == 201
+    return uuid.UUID(scan_response.json()["id"])
 
 
 def test_run_scan_always_requests_all_analyzers(monkeypatch: pytest.MonkeyPatch) -> None:

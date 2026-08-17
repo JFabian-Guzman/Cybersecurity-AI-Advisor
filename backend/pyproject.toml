@@ -52,6 +52,6 @@ testpaths = ["tests"]
 pythonpath = ["."]
 
 [tool.poe.tasks]
-dev = "python main.py"
-worker = "watchfiles 'uv run python worker.py' ."
+dev = "python -m app.main"
+worker = "watchfiles 'uv run python -m app.worker' ."
 test = "pytest"

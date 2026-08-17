@@ -15,4 +15,4 @@ RUN uv sync --frozen --no-dev
 
 EXPOSE 8000
 
-CMD ["uv", "run", "python", "main.py"]
+CMD ["uv", "run", "python", "-m", "app.main"]
