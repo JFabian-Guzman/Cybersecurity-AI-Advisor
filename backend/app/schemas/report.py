@@ -5,6 +5,12 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+class ReportFinding(BaseModel):
+    total_findings: int
+    severity_counts: dict[str, int]
+    rule_counts: dict[str, int]
+    category_counts: dict[str, int]
+
 
 class ReportResponse(BaseModel):
     scan_id: uuid.UUID

@@ -8,6 +8,7 @@ import yaml
 
 from .common import Finding
 
+
 _WORKLOAD_KINDS = {"Pod", "Deployment", "StatefulSet", "DaemonSet", "ReplicaSet", "Job", "CronJob"}
 _CONTAINER_FIELDS = ("containers", "initContainers")
 _HOST_NAMESPACE_FIELDS = ("hostNetwork", "hostPID", "hostIPC")

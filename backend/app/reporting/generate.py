@@ -5,20 +5,15 @@ from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
-from app.models import Finding, Report, Scan
+from app.models import Finding, Report
+from app.schemas.report import ReportFinding
+
+from app.services.findings_services import get_findings_by_scan_id
+from app.services.report_services import create_report, delete_report_by_scan_id
 
 SEVERITY_LEVELS = ("critical", "high", "medium", "low", "info")
 
-
-@dataclass(frozen=True)
-class ReportData:
-    total_findings: int
-    severity_counts: dict[str, int]
-    rule_counts: dict[str, int]
-    category_counts: dict[str, int]
-
-
-def aggregate(findings: Sequence[Finding]) -> ReportData:
+def add_report_findings(findings: Sequence[Finding]) -> ReportFinding:
     severity_counts = dict.fromkeys(SEVERITY_LEVELS, 0)
     rule_counts: dict[str, int] = {}
     category_counts: dict[str, int] = {}
@@ -28,7 +23,7 @@ def aggregate(findings: Sequence[Finding]) -> ReportData:
         rule_counts[finding.rule_id] = rule_counts.get(finding.rule_id, 0) + 1
         category_counts[finding.category] = category_counts.get(finding.category, 0) + 1
 
-    return ReportData(
+    return ReportFinding(
         total_findings=len(findings),
         severity_counts=severity_counts,
         rule_counts=rule_counts,
@@ -36,19 +31,21 @@ def aggregate(findings: Sequence[Finding]) -> ReportData:
     )
 
 
-def generate_report(session: Session, scan: Scan) -> Report:
-    findings = session.query(Finding).filter(Finding.scan_id == scan.id).all()
-    data = aggregate(findings)
+def generate_report(session: Session, scanId: str, user_id: str) -> Report:
+    findings = get_findings_by_scan_id(session, scanId)
+    data = add_report_findings(findings)
 
-    session.query(Report).filter(Report.scan_id == scan.id).delete()
+    delete_report_by_scan_id(session, scanId)
 
-    report = Report(
-        scan_id=scan.id,
-        user_id=scan.user_id,
-        severity_counts=data.severity_counts,
-        rule_counts=data.rule_counts,
-        category_counts=data.category_counts,
-        total_findings=data.total_findings,
+    report = create_report(
+        session,
+        Report(
+            scan_id=scanId,
+            user_id=user_id,
+            total_findings=data.total_findings,
+            severity_counts=data.severity_counts,
+            rule_counts=data.rule_counts,
+            category_counts=data.category_counts,
+        ),
     )
-    session.add(report)
     return report

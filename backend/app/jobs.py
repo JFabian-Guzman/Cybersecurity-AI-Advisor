@@ -9,13 +9,15 @@ from datetime import UTC, datetime
 
 import docker
 import structlog
+from app.services.findings_services import create_finding
 from docker.errors import DockerException
-from sqlalchemy.orm import Session
 
-from app.db.db import engine
+from app.db.db import SessionLocal
 from app.ingestion.clone import clone_repo
-from app.models import Finding, Scan
+from app.models import Finding
 from app.reporting.generate import generate_report
+from app.schemas.scan import ScanUpdate
+from app.services.scan_services import get_scan, update_scan
 
 log = structlog.get_logger()
 
@@ -34,13 +36,13 @@ _SEVERITY_MAP = {
 _ANALYZER_CATEGORIES = ("docker", "kubernetes")
 
 
-def _run_sandbox(repo_dir: str, analyzers: list[str]) -> list[dict]:
+def _run_sandbox(repo_path: str, analyzers: list[str]) -> list[dict]:
     client = docker.from_env()
     container = None
     try:
         container = client.containers.create(
             image=SANDBOX_IMAGE,
-            volumes={repo_dir: {"bind": "/repo", "mode": "ro"}},
+            volumes={repo_path: {"bind": "/repo", "mode": "ro"}},
             environment={"ANALYZERS": ",".join(analyzers)},
             network_mode="none",
             read_only=True,
@@ -70,18 +72,17 @@ def _run_sandbox(repo_dir: str, analyzers: list[str]) -> list[dict]:
 
 
 def run_scan(scan_id: uuid.UUID) -> None:
-    with Session(engine) as session:
-        scan = session.get(Scan, scan_id)
+    with SessionLocal() as session:
+        scanId = str(scan_id)
+        scan = get_scan(session, scanId)
         if scan is None:
-            log.error("job.scan_not_found", scan_id=str(scan_id))
+            log.error("job.scan_not_found", scan_id=scanId)
             return
 
         tmp_dir = tempfile.mkdtemp(prefix="scan-")
         try:
-            scan.status = "running"
-            scan.started_at = datetime.now(UTC)
-            session.commit()
-            log.info("job.scan_running", scan_id=str(scan_id))
+            update_scan(session, scanId, ScanUpdate(status="running"))
+            log.info("job.scan_running", scan_id=scanId)
 
             repo = scan.repository
             if repo.source_type != "git_url":
@@ -94,7 +95,8 @@ def run_scan(scan_id: uuid.UUID) -> None:
             log.info("analyzers", analyzers=analyzers)
 
             for item in raw_findings:
-                session.add(
+                create_finding(
+                    session,
                     Finding(
                         scan_id=scan.id,
                         user_id=scan.user_id,
@@ -105,23 +107,17 @@ def run_scan(scan_id: uuid.UUID) -> None:
                         message=item["message"],
                         remediation=item["remediation"],
                         category=item.get("category", "docker"),
-                    )
+                    ),
                 )
 
-            session.flush()
-            generate_report(session, scan)
+            generate_report(session, scanId, scan.user_id)
 
-            scan.status = "succeeded"
-            scan.finished_at = datetime.now(UTC)
-            session.commit()
-            log.info("job.scan_succeeded", scan_id=str(scan_id), findings=len(raw_findings))
+            update_scan(session, scanId, ScanUpdate(status="succeeded", finished_at=datetime.now(UTC)))
+            log.info("job.scan_succeeded", scan_id=scanId, findings=len(raw_findings))
 
         except Exception as exc:
             session.rollback()
-            scan.status = "failed"
-            scan.error = str(exc)
-            scan.finished_at = datetime.now(UTC)
-            session.commit()
-            log.error("job.scan_failed", scan_id=str(scan_id), error=str(exc))
+            update_scan(session, scanId, ScanUpdate(status="failed", error=str(exc), finished_at=datetime.now(UTC)))
+            log.error("job.scan_failed", scan_id=scanId, error=str(exc))
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)

@@ -12,6 +12,13 @@ class ScanCreate(BaseModel):
     status: str = "queued"
 
 
+class ScanUpdate(BaseModel):
+    status: str | None = None
+    error: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+
 class ScanResponse(BaseModel):
     id: uuid.UUID
     status: str
