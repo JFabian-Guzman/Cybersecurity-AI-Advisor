@@ -5,6 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+
 class ReportFinding(BaseModel):
     total_findings: int
     severity_counts: dict[str, int]

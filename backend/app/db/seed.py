@@ -1,11 +1,9 @@
-import uuid
-
 from sqlalchemy.orm import Session
 
 from app.db.db import engine
 from app.models import User
+from app.services.user_services import STUB_USER_ID
 
-STUB_USER_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 STUB_USER_EMAIL = "stub@local.dev"
 
 
