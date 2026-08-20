@@ -6,10 +6,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.db.db import engine
-from app.dependencies import STUB_USER_ID
 from app.main import app
-from app.models import Finding, Scan
+from app.models import Finding, Repository, Scan, User
 from app.reporting.generate import generate_report
+from app.services.user_services import STUB_USER_ID
 
 client = TestClient(app)
 
@@ -25,6 +25,46 @@ def _create_scan() -> str:
     scan_response = client.post("/api/scans", json={"repository_id": repository_id})
     assert scan_response.status_code == 201
     return str(scan_response.json()["id"])
+
+
+def _create_foreign_scan() -> str:
+    """Creates a scan owned by a different user, to assert the stub user can't read it."""
+    with Session(engine) as session:
+        other_user = User(email=f"other-{uuid.uuid4()}@example.com")
+        session.add(other_user)
+        session.flush()
+
+        repository = Repository(
+            user_id=other_user.id,
+            name="foreign-repo",
+            source_type="git_url",
+            source_ref=f"https://github.com/example/foreign-{uuid.uuid4()}",
+        )
+        session.add(repository)
+        session.flush()
+
+        scan = Scan(repository_id=repository.id, user_id=other_user.id, status="queued")
+        session.add(scan)
+        session.commit()
+        return str(scan.id)
+
+
+def test_get_scan_owned_by_another_user_is_not_found() -> None:
+    scan_id = _create_foreign_scan()
+    response = client.get(f"/api/scans/{scan_id}")
+    assert response.status_code == 404
+
+
+def test_get_scan_findings_owned_by_another_user_is_not_found() -> None:
+    scan_id = _create_foreign_scan()
+    response = client.get(f"/api/scans/{scan_id}/findings")
+    assert response.status_code == 404
+
+
+def test_get_scan_report_owned_by_another_user_is_not_found() -> None:
+    scan_id = _create_foreign_scan()
+    response = client.get(f"/api/scans/{scan_id}/report")
+    assert response.status_code == 404
 
 
 def test_get_scan_findings_not_found() -> None:
@@ -99,7 +139,7 @@ def test_get_report_returns_counts() -> None:
 
         scan = session.get(Scan, uuid.UUID(scan_id))
         assert scan is not None
-        generate_report(session, scan)
+        generate_report(session, scan.id, scan.user_id)
         scan.status = "succeeded"
         session.commit()
 

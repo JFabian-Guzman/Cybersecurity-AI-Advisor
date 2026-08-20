@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 
 from app.models import Finding
-from app.reporting.generate import aggregate
+from app.reporting.generate import add_report_findings as aggregate
 
 
 def _finding(rule_id: str, severity: str, category: str = "docker") -> Finding:

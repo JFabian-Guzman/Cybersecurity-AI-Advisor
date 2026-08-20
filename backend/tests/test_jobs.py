@@ -23,7 +23,7 @@ def _create_scan() -> uuid.UUID:
     assert connect_response.status_code == 201
     repository_id = connect_response.json()["id"]
 
-    scan_response = client.post(f"/api/repositories/{repository_id}/scans")
+    scan_response = client.post("/api/scans", json={"repository_id": repository_id})
     assert scan_response.status_code == 201
     return uuid.UUID(scan_response.json()["id"])
 
