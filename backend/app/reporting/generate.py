@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import uuid
 from collections.abc import Sequence
-from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
 from app.models import Finding, Report
 from app.schemas.report import ReportFinding
-
 from app.services.findings_services import get_findings_by_scan_id
 from app.services.report_services import create_report, delete_report_by_scan_id
 
 SEVERITY_LEVELS = ("critical", "high", "medium", "low", "info")
+
 
 def add_report_findings(findings: Sequence[Finding]) -> ReportFinding:
     severity_counts = dict.fromkeys(SEVERITY_LEVELS, 0)
@@ -31,16 +31,16 @@ def add_report_findings(findings: Sequence[Finding]) -> ReportFinding:
     )
 
 
-def generate_report(session: Session, scanId: str, user_id: str) -> Report:
-    findings = get_findings_by_scan_id(session, scanId)
+def generate_report(session: Session, scan_id: uuid.UUID, user_id: uuid.UUID) -> Report:
+    findings = get_findings_by_scan_id(session, scan_id, user_id)
     data = add_report_findings(findings)
 
-    delete_report_by_scan_id(session, scanId)
+    delete_report_by_scan_id(session, scan_id)
 
     report = create_report(
         session,
         Report(
-            scan_id=scanId,
+            scan_id=scan_id,
             user_id=user_id,
             total_findings=data.total_findings,
             severity_counts=data.severity_counts,

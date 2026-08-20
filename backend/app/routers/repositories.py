@@ -16,12 +16,13 @@ log = structlog.get_logger()
 
 router = APIRouter(prefix="/api/repositories", tags=["repositories"])
 
+
 @router.post("", response_model=RepositoryResponse, status_code=201)
 def connect_repository(
     body: GitUrlRequest,
     session: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> RepositoryResponse:
-    current_user = get_current_user(session)
     source_ref = str(body.url)
 
     repository = get_repository(session, current_user.id, source_ref)

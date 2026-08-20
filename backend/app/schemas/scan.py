@@ -21,6 +21,8 @@ class ScanUpdate(BaseModel):
 
 class ScanResponse(BaseModel):
     id: uuid.UUID
+    repository_id: uuid.UUID
+    repository_name: str
     status: str
     error: str | None
     started_at: datetime | None

@@ -9,7 +9,6 @@ from datetime import UTC, datetime
 
 import docker
 import structlog
-from app.services.findings_services import create_finding
 from docker.errors import DockerException
 
 from app.db.db import SessionLocal
@@ -17,6 +16,7 @@ from app.ingestion.clone import clone_repo
 from app.models import Finding
 from app.reporting.generate import generate_report
 from app.schemas.scan import ScanUpdate
+from app.services.findings_services import create_finding
 from app.services.scan_services import get_scan, update_scan
 
 log = structlog.get_logger()
@@ -73,16 +73,15 @@ def _run_sandbox(repo_path: str, analyzers: list[str]) -> list[dict]:
 
 def run_scan(scan_id: uuid.UUID) -> None:
     with SessionLocal() as session:
-        scanId = str(scan_id)
-        scan = get_scan(session, scanId)
+        scan = get_scan(session, scan_id)
         if scan is None:
-            log.error("job.scan_not_found", scan_id=scanId)
+            log.error("job.scan_not_found", scan_id=str(scan_id))
             return
 
         tmp_dir = tempfile.mkdtemp(prefix="scan-")
         try:
-            update_scan(session, scanId, ScanUpdate(status="running"))
-            log.info("job.scan_running", scan_id=scanId)
+            update_scan(session, scan_id, ScanUpdate(status="running"))
+            log.info("job.scan_running", scan_id=str(scan_id))
 
             repo = scan.repository
             if repo.source_type != "git_url":
@@ -110,14 +109,14 @@ def run_scan(scan_id: uuid.UUID) -> None:
                     ),
                 )
 
-            generate_report(session, scanId, scan.user_id)
+            generate_report(session, scan_id, scan.user_id)
 
-            update_scan(session, scanId, ScanUpdate(status="succeeded", finished_at=datetime.now(UTC)))
-            log.info("job.scan_succeeded", scan_id=scanId, findings=len(raw_findings))
+            update_scan(session, scan_id, ScanUpdate(status="succeeded", finished_at=datetime.now(UTC)))
+            log.info("job.scan_succeeded", scan_id=str(scan_id), findings=len(raw_findings))
 
         except Exception as exc:
             session.rollback()
-            update_scan(session, scanId, ScanUpdate(status="failed", error=str(exc), finished_at=datetime.now(UTC)))
-            log.error("job.scan_failed", scan_id=scanId, error=str(exc))
+            update_scan(session, scan_id, ScanUpdate(status="failed", error=str(exc), finished_at=datetime.now(UTC)))
+            log.error("job.scan_failed", scan_id=str(scan_id), error=str(exc))
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
