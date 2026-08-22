@@ -17,7 +17,6 @@ def create_scan(db: Session, scan: ScanCreate) -> Scan:
     db.refresh(db_scan)
     return db_scan
 
-
 def to_scan_response(scan: Scan) -> ScanResponse:
     return ScanResponse(
         id=scan.id,
@@ -29,13 +28,11 @@ def to_scan_response(scan: Scan) -> ScanResponse:
         finished_at=scan.finished_at,
     )
 
-
 def get_scan(db: Session, scan_id: uuid.UUID, user_id: uuid.UUID | None = None) -> Scan | None:
     query = db.query(Scan).filter(Scan.id == scan_id)
     if user_id is not None:
         query = query.filter(Scan.user_id == user_id)
     return query.first()
-
 
 def update_scan(db: Session, scan_id: uuid.UUID, updates: ScanUpdate) -> Scan | None:
     scan = db.query(Scan).filter(Scan.id == scan_id).first()

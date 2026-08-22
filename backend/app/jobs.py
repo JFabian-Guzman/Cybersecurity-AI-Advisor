@@ -84,14 +84,11 @@ def run_scan(scan_id: uuid.UUID) -> None:
             log.info("job.scan_running", scan_id=str(scan_id))
 
             repo = scan.repository
-            if repo.source_type != "git_url":
-                raise RuntimeError(f"Unsupported source type for scanning: {repo.source_type}")
 
             clone_repo(repo.source_ref, tmp_dir, timeout_seconds=SANDBOX_TIMEOUT, max_clone_mb=SANDBOX_MAX_CLONE_MB)
 
             analyzers = list(_ANALYZER_CATEGORIES)
             raw_findings = _run_sandbox(tmp_dir, analyzers)
-            log.info("analyzers", analyzers=analyzers)
 
             for item in raw_findings:
                 create_finding(
