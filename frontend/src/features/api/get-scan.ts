@@ -18,11 +18,10 @@ export async function getScan(scanId: string): Promise<Scan> {
   return data
 }
 
-export const useScanQuery = (scanId: string | null) => {
+export const useScanQuery = (scanId: string) => {
   return useQuery({
     queryKey: ['scan', scanId],
-    queryFn: () => getScan(scanId as string),
-    enabled: scanId !== null,
+    queryFn: () => getScan(scanId),
     refetchInterval: (query) => {
       const status = query.state.data?.status
       return status === 'queued' || status === 'running' ? 2000 : false

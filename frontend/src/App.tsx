@@ -4,25 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { ConnectRepositoryForm } from './features/components/ConnectRepositoryForm'
 import { ScanStatus } from './features/components/ScanStatus'
-import { useScanQuery } from './features/api/get-scan'
 
 function App() {
-  const [scanId, setScanId] = useState(() =>
-    new URLSearchParams(window.location.search).get('scanId'),
-  )
+  const [scanId, setScanId] = useState('')
+  const [repositoryName, setRepositoryName] = useState('')
 
-  const { data: scan } = useScanQuery(scanId)
-
-  function handleConnected(newScanId: string) {
+  function handleConnected(newScanId: string, newRepositoryName: string) {
     setScanId(newScanId)
-    const params = new URLSearchParams(window.location.search)
-    params.set('scanId', newScanId)
-    window.history.replaceState(null, '', `?${params.toString()}`)
+    setRepositoryName(newRepositoryName)
   }
 
   function handleReset() {
-    setScanId(null)
-    window.history.replaceState(null, '', window.location.pathname)
+    setScanId('')
+    setRepositoryName('')
   }
 
   return (
@@ -54,8 +48,7 @@ function App() {
               <CardDescription>
                 {scanId ? (
                   <>
-                    {scan?.repository_name ? `${scan.repository_name} - ` : ''}
-                    Scan <span className="font-mono">{scanId}</span>
+                    {repositoryName ? `${repositoryName}` : ''}
                   </>
                 ) : (
                   'Connect a repository to scan'
