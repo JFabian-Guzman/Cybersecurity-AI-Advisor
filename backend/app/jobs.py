@@ -59,7 +59,6 @@ def _run_sandbox(repo_path: str, analyzers: list[str]) -> list[dict]:
             stderr = container.logs(stdout=False, stderr=True).decode()
             raise RuntimeError(f"Sandbox exited with code {result.get('StatusCode')}: {stderr}")
         output = container.logs(stdout=True, stderr=False).decode()
-        log.info("sandbox_output", output=output)
         return json.loads(output)
     except DockerException as exc:
         raise RuntimeError(f"Failed to run sandbox container: {exc}") from exc
