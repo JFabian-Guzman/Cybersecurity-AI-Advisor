@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useFindingsQuery } from '../api/get-findings'
 import { categoryLabel } from '../types/findings'
 import type { Finding, Severity } from '../types/findings'
+import { getErrorMessage } from '@/lib/errors'
 
 const SEVERITY_RANK: Record<Severity, number> = { high: 0, medium: 1, low: 2 }
 
@@ -70,7 +71,7 @@ export function FindingsByFile({ scanId }: FindingsByFileProps) {
   }
 
   if (isError) {
-    return <p className="text-destructive">Failed to load findings: {(error as Error).message}</p>
+    return <p className="text-destructive">Failed to load findings: {getErrorMessage(error)}</p>
   }
 
   if (!data || data.length === 0) {
@@ -105,16 +106,20 @@ export function FindingsByFile({ scanId }: FindingsByFileProps) {
                   </AccordionTrigger>
                   <AccordionContent>
                     <ul className="flex flex-col gap-3">
-                      {findings.map((finding) => (
+                      {[...findings]
+                        .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
+                        .map((finding) => (
                         <li key={finding.id} className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
                             <Badge variant={SEVERITY_BADGE_VARIANT[finding.severity]}>
                               {finding.severity}
                             </Badge>
                             <span className="text-xs text-muted-foreground">{finding.rule_id}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {finding.line_number && `Line  ${finding.line_number}`}
-                            </span>
+                            {finding.line_number != null && (
+                              <span className="text-xs text-muted-foreground">
+                                Line {finding.line_number}
+                              </span>
+                            )}
                           </div>
                           <p className="text-sm">
                             <span className="font-semibold">Error: </span>

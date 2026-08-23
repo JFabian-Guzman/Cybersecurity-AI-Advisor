@@ -8,7 +8,7 @@ interface LoadingProps {
 
 function Loading({ label, className }: LoadingProps) {
   return (
-    <p data-slot="loading" className={cn('flex items-center gap-2 text-sm text-[#94A3B8]', className)}>
+    <p data-slot="loading" className={cn('flex items-center gap-2 text-sm text-muted-foreground', className)}>
       <Spinner />
       {label}
     </p>
@@ -16,6 +16,3 @@ function Loading({ label, className }: LoadingProps) {
 }
 
 export { Loading }
-
-
-

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useConnectRepositoryMutation } from '../hooks/use-mutation'
+import { useConnectRepositoryMutation } from '../api/connect-repository'
 import { useCreateScanMutation } from '../api/create-scan'
+import { getErrorMessage } from '@/lib/errors'
 
 interface ConnectRepositoryFormProps {
   onConnected: (scanId: string, repositoryName: string) => void
@@ -36,7 +37,7 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
       }}
     >
       <div className="flex flex-col gap-2">
-        <label htmlFor="repo-url" className="text-sm text-[#94A3B8]">
+        <label htmlFor="repo-url" className="text-sm text-muted-foreground">
           Repository URL
         </label>
         <Input
@@ -49,8 +50,8 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
         />
       </div>
       {isError && (
-        <p className="text-sm text-[#EF4444]">
-          Failed to connect repository: {(error as Error).message}
+        <p className="text-sm text-destructive">
+          Failed to connect repository: {getErrorMessage(error)}
         </p>
       )}
       <Button type="submit" disabled={isPending}>

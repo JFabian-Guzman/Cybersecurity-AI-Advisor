@@ -24,7 +24,12 @@ export const useScanQuery = (scanId: string) => {
     queryFn: () => getScan(scanId),
     refetchInterval: (query) => {
       const status = query.state.data?.status
-      return status === 'queued' || status === 'running' ? 2000 : false
+      if (status !== 'queued' && status !== 'running') return false
+      const startedAt = query.state.data?.started_at
+      if (startedAt && Date.now() - new Date(startedAt).getTime() > 10 * 60 * 1000) {
+        return false
+      }
+      return 2000
     },
   })
 }

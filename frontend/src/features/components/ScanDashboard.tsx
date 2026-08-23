@@ -38,7 +38,7 @@ export function ScanDashboard() {
               </span>
             </h1>
           </div>
-          <p className="text-[#94A3B8]">Security findings for your scanned repository</p>
+          <p className="text-muted-foreground">Security findings for your scanned repository</p>
         </header>
 
         <Card>

@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useReportQuery } from '../api/get-report'
 import { categoryLabel } from '../types/findings'
+import { getErrorMessage } from '@/lib/errors'
 
 const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low', 'info'] as const
 
@@ -30,7 +31,7 @@ export function ReportSummary({ scanId }: ReportSummaryProps) {
   }
 
   if (isError) {
-    return <p className="text-destructive">Failed to load report: {(error as Error).message}</p>
+    return <p className="text-destructive">Failed to load report: {getErrorMessage(error)}</p>
   }
 
   if (!data) return null
