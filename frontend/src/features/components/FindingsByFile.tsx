@@ -109,28 +109,30 @@ export function FindingsByFile({ scanId }: FindingsByFileProps) {
                       {[...findings]
                         .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity])
                         .map((finding) => (
-                        <li key={finding.id} className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={SEVERITY_BADGE_VARIANT[finding.severity]}>
-                              {finding.severity}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">{finding.rule_id}</span>
-                            {finding.line_number != null && (
+                          <li key={finding.id} className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant={SEVERITY_BADGE_VARIANT[finding.severity]}>
+                                {finding.severity}
+                              </Badge>
                               <span className="text-xs text-muted-foreground">
-                                Line {finding.line_number}
+                                {finding.rule_id}
                               </span>
-                            )}
-                          </div>
-                          <p className="text-sm">
-                            <span className="font-semibold">Error: </span>
-                            {finding.message}
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-semibold">Fix: </span>
-                            {finding.remediation}
-                          </p>
-                        </li>
-                      ))}
+                              {finding.line_number != null && (
+                                <span className="text-xs text-muted-foreground">
+                                  Line {finding.line_number}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm">
+                              <span className="font-semibold">Error: </span>
+                              {finding.message}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-semibold">Fix: </span>
+                              {finding.remediation}
+                            </p>
+                          </li>
+                        ))}
                     </ul>
                   </AccordionContent>
                 </AccordionItem>

@@ -7,13 +7,14 @@ import { getErrorMessage } from '@/lib/errors'
 
 const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low', 'info'] as const
 
-const SEVERITY_BADGE_VARIANT: Record<string, 'destructive' | 'warning' | 'secondary' | 'outline'> = {
-  critical: 'destructive',
-  high: 'destructive',
-  medium: 'warning',
-  low: 'outline',
-  info: 'secondary',
-}
+const SEVERITY_BADGE_VARIANT: Record<string, 'destructive' | 'warning' | 'secondary' | 'outline'> =
+  {
+    critical: 'destructive',
+    high: 'destructive',
+    medium: 'warning',
+    low: 'outline',
+    info: 'secondary',
+  }
 
 interface ReportSummaryProps {
   scanId: string
