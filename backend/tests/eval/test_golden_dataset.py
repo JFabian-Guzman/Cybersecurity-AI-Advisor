@@ -7,8 +7,8 @@ from typing import Any
 import pytest
 import yaml
 
-from analysis.docker import Finding, inspect_files
-from analysis.k8s import inspect_files as inspect_k8s_files
+from app.analysis.docker import Finding, inspect_files
+from app.analysis.k8s import inspect_files as inspect_k8s_files
 
 FIXTURES_ROOT = Path(__file__).resolve().parents[3] / "fixtures"
 

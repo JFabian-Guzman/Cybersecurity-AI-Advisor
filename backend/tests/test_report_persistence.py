@@ -5,22 +5,26 @@ import uuid
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from db import engine
-from dependencies import STUB_USER_ID
-from main import app
-from models import Finding, Report, Scan
-from reporting.generate import generate_report
+from app.db.db import engine
+from app.main import app
+from app.models import Finding, Report, Scan
+from app.reporting.generate import generate_report
+from app.services.user_services import STUB_USER_ID
 
 client = TestClient(app)
 
 
 def _create_scan() -> uuid.UUID:
-    response = client.post(
+    connect_response = client.post(
         "/api/repositories",
         json={"url": "https://github.com/example/repo", "name": "test-repo"},
     )
-    assert response.status_code == 201
-    return uuid.UUID(response.json()["scan_id"])
+    assert connect_response.status_code == 201
+    repository_id = connect_response.json()["id"]
+
+    scan_response = client.post("/api/scans", json={"repository_id": repository_id})
+    assert scan_response.status_code == 201
+    return uuid.UUID(scan_response.json()["id"])
 
 
 def _seed_findings(session: Session, scan_id: uuid.UUID) -> None:
@@ -54,7 +58,7 @@ def test_generate_report_persists_counts() -> None:
         _seed_findings(session, scan_id)
         scan = session.get(Scan, scan_id)
         assert scan is not None
-        generate_report(session, scan)
+        generate_report(session, scan.id, scan.user_id)
         session.commit()
 
     with Session(engine) as session:
@@ -75,9 +79,9 @@ def test_generate_report_replaces_previous_run() -> None:
         _seed_findings(session, scan_id)
         scan = session.get(Scan, scan_id)
         assert scan is not None
-        generate_report(session, scan)
+        generate_report(session, scan.id, scan.user_id)
         session.commit()
-        generate_report(session, scan)
+        generate_report(session, scan.id, scan.user_id)
         session.commit()
 
     with Session(engine) as session:
@@ -92,7 +96,7 @@ def test_generate_report_with_no_findings() -> None:
     with Session(engine) as session:
         scan = session.get(Scan, scan_id)
         assert scan is not None
-        generate_report(session, scan)
+        generate_report(session, scan.id, scan.user_id)
         session.commit()
 
     with Session(engine) as session:

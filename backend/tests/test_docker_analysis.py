@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from analysis.docker import inspect_files
+from app.analysis.docker import inspect_files
 
 
 def _write_dockerfile(tmp_path: Path, content: str, name: str = "Dockerfile") -> str:
