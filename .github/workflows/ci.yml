@@ -59,7 +59,7 @@ jobs:
       - run: uv run black --check .
       - run: uv run mypy .
       - run: uv run alembic upgrade head
-      - run: uv run python seed.py
+      - run: uv run python -m app.db.seed
       - run: uv run pytest --ignore=tests/eval
       - run: uv run pytest tests/eval -v
 
