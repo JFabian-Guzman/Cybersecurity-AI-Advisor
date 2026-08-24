@@ -56,8 +56,8 @@ def test_inspect_repo_classifies_dockerfile() -> None:
 
 def test_inspect_repo_detects_kubernetes_by_content_outside_conventional_folder() -> None:
     """fixtures/K8s/repo-privileged puts deployment.yaml directly in the repo root
-    (not under a k8s/kubernetes/manifests folder), so this only passes once
-    classify_file's path-only heuristic is backed by a content-based fallback."""
+    (not under a k8s/kubernetes/manifests folder), so this only passes via the
+    content-based sniff, not the folder heuristic."""
     manifest = inspect_repo(str(FIXTURES_DIR / "K8s" / "repo-privileged"))
     k8s_files = [f for f in manifest.files if f.category == "kubernetes"]
     assert any(f.path == "deployment.yaml" for f in k8s_files)

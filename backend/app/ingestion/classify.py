@@ -22,6 +22,12 @@ _K8S_WORKLOAD_KINDS = {
 }
 _KIND_PATTERN = re.compile(r"^kind:\s*(\S+)", re.MULTILINE)
 _CONTENT_SNIFF_BYTES = 8192
+_KUBERNETES_DIR_NAMES = {"k8s", "kubernetes", "manifests"}
+
+
+def _in_kubernetes_dir(path: str) -> bool:
+    parts = path.replace("\\", "/").split("/")[:-1]
+    return any(part.lower() in _KUBERNETES_DIR_NAMES for part in parts)
 
 
 def _content_suggests_kubernetes(full_path: str) -> bool:
@@ -48,7 +54,7 @@ def classify_file(path: str) -> str:
         return "terraform"
 
     if ext in (".yaml", ".yml"):
-        if _content_suggests_kubernetes(path):
+        if _content_suggests_kubernetes(path) or _in_kubernetes_dir(path):
             return "kubernetes"
         return "config"
 
@@ -131,7 +137,7 @@ def inspect_repo(repo_path: str) -> RepoManifest:
             relative_path = os.path.relpath(full_path, repo_path)
             relative_path = relative_path.replace("\\", "/")
 
-            category = classify_file(relative_path)
+            category = classify_file(full_path)
 
             files.append(FileEntry(path=relative_path, category=category))
 
