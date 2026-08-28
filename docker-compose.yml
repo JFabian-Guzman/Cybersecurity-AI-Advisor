@@ -67,7 +67,7 @@ services:
     build:
       context: ./backend
     restart: unless-stopped
-    command: uv run python worker.py
+    command: uv run python -m app.worker
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-cybersec}:${POSTGRES_PASSWORD:-cybersec}@postgres:5432/${POSTGRES_DB:-cybersec}
       REDIS_URL: redis://redis:6379/0
@@ -99,7 +99,7 @@ services:
   sandbox:
     build:
       context: ./backend
-      dockerfile: sandbox/Dockerfile
+      dockerfile: app/sandbox/Dockerfile
     image: cybersecurity-ai-advisor-sandbox
     profiles: ["sandbox"]
     network_mode: none

@@ -1,0 +1,8 @@
+findings:
+  - rule_id:  DF001
+    severity: HIGH
+    file:     Dockerfile
+    line:     null
+    message: >
+      No USER directive found — the container runs as root by default. Add a
+      USER directive with a non-root user before CMD/ENTRYPOINT.

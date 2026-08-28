@@ -1,0 +1,10 @@
+findings:
+  - rule_id:  K8S001
+    severity: HIGH
+    file:     deployment.yaml
+    line:     19
+    message: >
+      Container 'app' runs with securityContext.privileged: true, granting it
+      full access to the host's devices and kernel capabilities. Remove
+      privileged: true (or set it to false) and grant only the specific Linux
+      capabilities the workload actually needs.

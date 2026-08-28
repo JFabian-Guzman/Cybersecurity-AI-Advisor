@@ -1,0 +1,10 @@
+findings:
+  - rule_id:  K8S003
+    severity: MEDIUM
+    file:     deployment.yaml
+    line:     16
+    message: >
+      Container 'app' has no resources.requests/limits for cpu or memory —
+      without them it can starve or be starved by other workloads on the
+      same node, with no OOM/CPU boundaries. Set explicit resources.requests
+      and resources.limits for cpu and memory.

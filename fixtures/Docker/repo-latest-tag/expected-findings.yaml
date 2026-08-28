@@ -1,0 +1,8 @@
+findings:
+  - rule_id:  DF002
+    severity: MEDIUM
+    file:     Dockerfile
+    line:     1
+    message: >
+      Base image "python:latest" uses a mutable tag. Pin to an explicit
+      version (and ideally a digest) for reproducible, auditable builds.
