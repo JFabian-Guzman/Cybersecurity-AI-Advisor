@@ -76,3 +76,53 @@ def test_run_scan_always_requests_all_analyzers(monkeypatch: pytest.MonkeyPatch)
         scan = session.get(Scan, scan_id)
         assert scan is not None
         assert scan.status == "succeeded"
+
+
+def test_run_scan_records_started_and_finished_timestamps(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression test: run_scan flipped the status to "running" without ever writing
+    scan.started_at, so ScanResponse.started_at was always null even on succeeded scans
+    (finished_at was written correctly, which made the gap easy to miss). The scan history
+    view depends on both timestamps being present."""
+    scan_id = _create_scan()
+
+    def fake_clone_repo(url: str, dest_dir: str, timeout_seconds: int, max_clone_mb: int) -> None:
+        with open(os.path.join(dest_dir, "Dockerfile"), "w") as fh:
+            fh.write("FROM python:3.14-slim\nUSER app\n")
+
+    def fake_run_sandbox(repo_dir: str, analyzers: list[str]) -> list[dict]:
+        return []
+
+    monkeypatch.setattr(jobs, "clone_repo", fake_clone_repo)
+    monkeypatch.setattr(jobs, "_run_sandbox", fake_run_sandbox)
+
+    jobs.run_scan(scan_id)
+
+    with Session(engine) as session:
+        scan = session.get(Scan, scan_id)
+        assert scan is not None
+        assert scan.status == "succeeded"
+        assert scan.started_at is not None
+        assert scan.finished_at is not None
+        assert scan.started_at <= scan.finished_at
+
+
+def test_run_scan_records_started_at_even_when_the_scan_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A failed scan still needs a start timestamp: the error state in the UI shows when the
+    run began. started_at is committed before the work that can raise, so the rollback in
+    run_scan's except branch does not undo it."""
+    scan_id = _create_scan()
+
+    def failing_clone_repo(url: str, dest_dir: str, timeout_seconds: int, max_clone_mb: int) -> None:
+        raise RuntimeError("clone exploded")
+
+    monkeypatch.setattr(jobs, "clone_repo", failing_clone_repo)
+
+    jobs.run_scan(scan_id)
+
+    with Session(engine) as session:
+        scan = session.get(Scan, scan_id)
+        assert scan is not None
+        assert scan.status == "failed"
+        assert scan.error is not None
+        assert scan.started_at is not None
+        assert scan.finished_at is not None
