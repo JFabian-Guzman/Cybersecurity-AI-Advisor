@@ -1,6 +1,6 @@
 findings:
   - rule_id:  DF002
-    severity: MEDIUM
+    severity: LOW
     file:     Dockerfile
     line:     1
     message: >

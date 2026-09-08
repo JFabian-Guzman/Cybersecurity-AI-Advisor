@@ -1,6 +1,6 @@
 findings:
   - rule_id:  K8S001
-    severity: HIGH
+    severity: CRITICAL
     file:     deployment.yaml
     line:     19
     message: >
