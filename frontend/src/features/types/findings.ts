@@ -1,4 +1,25 @@
-export type Severity = 'high' | 'medium' | 'low'
+export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info'
+
+export const SEVERITY_ORDER: Severity[] = ['critical', 'high', 'medium', 'low', 'info']
+
+export const SEVERITY_RANK: Record<Severity, number> = Object.fromEntries(
+  SEVERITY_ORDER.map((severity, index) => [severity, index]),
+) as Record<Severity, number>
+
+export const SEVERITY_BADGE_VARIANT: Record<
+  Severity,
+  'destructive' | 'warning' | 'secondary' | 'outline'
+> = {
+  critical: 'destructive',
+  high: 'destructive',
+  medium: 'warning',
+  low: 'outline',
+  info: 'secondary',
+}
+
+export function severityLabel(severity: Severity): string {
+  return severity.charAt(0).toUpperCase() + severity.slice(1)
+}
 
 export interface Finding {
   id: string

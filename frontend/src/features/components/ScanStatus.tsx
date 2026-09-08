@@ -1,5 +1,7 @@
 import { Loading } from '@/components/ui/loading'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { FindingsByFile } from './FindingsByFile'
+import { FindingsBySeverity } from './FindingsBySeverity'
 import { ReportSummary } from './ReportSummary'
 import { useScanQuery } from '../api/get-scan'
 import { getErrorMessage } from '@/lib/errors'
@@ -27,7 +29,22 @@ export function ScanStatus({ scanId }: ScanStatusProps) {
   return (
     <div className="flex flex-col gap-4">
       <ReportSummary scanId={scanId} />
-      <FindingsByFile scanId={scanId} />
+      <Tabs defaultValue="file">
+        <TabsList variant="line">
+          <TabsTrigger variant="line" value="file">
+            By file
+          </TabsTrigger>
+          <TabsTrigger variant="line" value="severity">
+            By severity
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="file">
+          <FindingsByFile scanId={scanId} />
+        </TabsContent>
+        <TabsContent value="severity">
+          <FindingsBySeverity scanId={scanId} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
