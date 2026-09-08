@@ -12,7 +12,10 @@
 - Comment **why** something is done, not what — the code itself should explain the what.
 - Avoid redundant comments that simply restate the code in plain English.
 - Provide meaningful, actionable error messages that help identify what went wrong and where.
-
+- Run `pre-commit install` after cloning. Commit hooks check staged files only; the
+  pre-push stage runs `ruff` and `black` across the whole `backend` tree via `uv`,
+  matching CI exactly.
+  
 ### Git
 
 #### Branches
