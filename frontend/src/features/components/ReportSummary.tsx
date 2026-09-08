@@ -2,19 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useReportQuery } from '../api/get-report'
-import { categoryLabel } from '../types/findings'
+import { categoryLabel, SEVERITY_BADGE_VARIANT, SEVERITY_ORDER } from '../types/findings'
 import { getErrorMessage } from '@/lib/errors'
-
-const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low', 'info'] as const
-
-const SEVERITY_BADGE_VARIANT: Record<string, 'destructive' | 'warning' | 'secondary' | 'outline'> =
-  {
-    critical: 'destructive',
-    high: 'destructive',
-    medium: 'warning',
-    low: 'outline',
-    info: 'secondary',
-  }
 
 interface ReportSummaryProps {
   scanId: string
