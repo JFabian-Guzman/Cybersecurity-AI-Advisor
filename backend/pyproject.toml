@@ -37,6 +37,9 @@ line-length = 120
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
 [tool.black]
 line-length = 120
 target-version = ["py314"]
@@ -55,6 +58,3 @@ pythonpath = ["."]
 dev = "python -m app.main"
 worker = "watchfiles 'uv run python -m app.worker' ."
 test = "pytest"
-
-[tool.ruff.lint.isort]
-known-first-party = ["app"]
