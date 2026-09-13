@@ -79,7 +79,7 @@ def run_scan(scan_id: uuid.UUID) -> None:
 
         tmp_dir = tempfile.mkdtemp(prefix="scan-")
         try:
-            update_scan(session, scan_id, ScanUpdate(status="running"))
+            update_scan(session, scan_id, ScanUpdate(status="running", started_at=datetime.now(UTC)))
             log.info("job.scan_running", scan_id=str(scan_id))
 
             repo = scan.repository

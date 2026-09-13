@@ -55,6 +55,18 @@ jobs:
           enable-cache: true
           working-directory: backend
       - run: uv sync --frozen
+      - name: Debug ruff environment
+        run: |
+          echo "=== commit ==="
+          git rev-parse HEAD
+          echo "=== ruff version ==="
+          uv run ruff --version
+          echo "=== python version ==="
+          uv run python --version
+          echo "=== pyproject.toml (tail) ==="
+          tail -n 20 pyproject.toml
+          echo "=== ruff settings (filtrado) ==="
+          uv run ruff check . --show-settings 2>&1 | grep -Ei "isort|first.party|^src|known" || true
       - run: uv run ruff check .
       - run: uv run black --check .
       - run: uv run mypy .
