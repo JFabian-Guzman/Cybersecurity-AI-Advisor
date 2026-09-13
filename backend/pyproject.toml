@@ -55,6 +55,3 @@ pythonpath = ["."]
 dev = "python -m app.main"
 worker = "watchfiles 'uv run python -m app.worker' ."
 test = "pytest"
-
-[tool.ruff.lint.isort]
-known-first-party = ["app"]
