@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
 import structlog
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
 from app.jobs import run_scan
 from app.models import Scan, User
+from app.reporting.export import build_export_document, render_markdown
 from app.schemas.finding import FindingResponse
 from app.schemas.report import ReportResponse
 from app.schemas.scan import ScanCreate, ScanResponse
@@ -110,3 +112,39 @@ def get_scan_report(
 ) -> ReportResponse:
     _scan, report = _get_succeeded_scan_with_report(scan_id, session, current_user)
     return ReportResponse.model_validate(report)
+
+
+@router.get("/{scan_id}/report/export", response_model=None)
+def export_scan_report(
+    scan_id: uuid.UUID,
+    session: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    format: Annotated[Literal["markdown", "pdf"], Query()] = "markdown",
+) -> Response:
+    """Export the scan report as a downloadable file.
+
+    Query parameters:
+        format: ``markdown`` (default) or ``pdf``.
+
+    Responses:
+        200 text/markdown — Markdown export with Content-Disposition attachment.
+        409 — Scan has not succeeded yet.
+        404 — Scan not owned by the current user, or report missing.
+        422 — ``format`` is not ``markdown`` or ``pdf`` (FastAPI validates ``Literal``).
+    """
+    scan, report = _get_succeeded_scan_with_report(scan_id, session, current_user)
+
+    repo_name: str = scan.repository.name
+    doc = build_export_document(report, repo_name)
+
+    if format == "markdown":
+        content = render_markdown(doc)
+        filename = f"{doc.repo_slug}-{doc.scan_id}.md"
+        return Response(
+            content=content,
+            media_type="text/markdown",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    # format == "pdf" — renderer lives in feature/report-export-pdf
+    raise HTTPException(status_code=501, detail="PDF export is not yet implemented")
