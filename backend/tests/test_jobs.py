@@ -1,31 +1,14 @@
 from __future__ import annotations
 
 import os
-import uuid
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 import app.jobs as jobs
 from app.db.db import engine
-from app.main import app
 from app.models import Scan
-
-client = TestClient(app)
-
-
-def _create_scan() -> uuid.UUID:
-    connect_response = client.post(
-        "/api/repositories",
-        json={"url": "https://github.com/example/repo", "name": "test-repo"},
-    )
-    assert connect_response.status_code == 201
-    repository_id = connect_response.json()["id"]
-
-    scan_response = client.post("/api/scans", json={"repository_id": repository_id})
-    assert scan_response.status_code == 201
-    return uuid.UUID(scan_response.json()["id"])
+from tests.conftest import create_scan
 
 
 def test_run_scan_always_requests_all_analyzers(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -35,7 +18,7 @@ def test_run_scan_always_requests_all_analyzers(monkeypatch: pytest.MonkeyPatch)
     before the workload document, outside any k8s/kubernetes/manifests folder). The fix is
     to always request every analyzer and let each one decide for itself whether it finds
     anything, so this asserts "kubernetes" is requested regardless of repo content."""
-    scan_id = _create_scan()
+    scan_id = create_scan()
     captured_analyzers: list[str] = []
 
     def fake_clone_repo(url: str, dest_dir: str, timeout_seconds: int, max_clone_mb: int) -> None:
@@ -83,7 +66,7 @@ def test_run_scan_records_started_and_finished_timestamps(monkeypatch: pytest.Mo
     scan.started_at, so ScanResponse.started_at was always null even on succeeded scans
     (finished_at was written correctly, which made the gap easy to miss). The scan history
     view depends on both timestamps being present."""
-    scan_id = _create_scan()
+    scan_id = create_scan()
 
     def fake_clone_repo(url: str, dest_dir: str, timeout_seconds: int, max_clone_mb: int) -> None:
         with open(os.path.join(dest_dir, "Dockerfile"), "w") as fh:
@@ -110,7 +93,7 @@ def test_run_scan_records_started_at_even_when_the_scan_fails(monkeypatch: pytes
     """A failed scan still needs a start timestamp: the error state in the UI shows when the
     run began. started_at is committed before the work that can raise, so the rollback in
     run_scan's except branch does not undo it."""
-    scan_id = _create_scan()
+    scan_id = create_scan()
 
     def failing_clone_repo(url: str, dest_dir: str, timeout_seconds: int, max_clone_mb: int) -> None:
         raise RuntimeError("clone exploded")
