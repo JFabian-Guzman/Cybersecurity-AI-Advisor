@@ -40,6 +40,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   kubernetes: 'Kubernetes',
 }
 
+export const FINDING_CATEGORIES: string[] = ['docker', 'kubernetes']
+
 export function categoryLabel(category: string): string {
   return CATEGORY_LABELS[category] ?? category
 }

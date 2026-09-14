@@ -106,6 +106,153 @@ def test_get_scan_findings_returns_seeded_rows() -> None:
     assert data[0]["file_path"] == "Dockerfile"
 
 
+def test_get_scan_findings_filters_by_severity() -> None:
+    scan_id = _create_scan()
+    scan_uuid = uuid.UUID(scan_id)
+
+    with Session(engine) as session:
+        session.add_all(
+            [
+                Finding(
+                    scan_id=scan_uuid,
+                    user_id=STUB_USER_ID,
+                    rule_id="DF001",
+                    severity="high",
+                    category="docker",
+                    file_path="Dockerfile",
+                    line_number=1,
+                    message="Container runs as root",
+                    remediation="Add a USER directive with a non-root user.",
+                ),
+                Finding(
+                    scan_id=scan_uuid,
+                    user_id=STUB_USER_ID,
+                    rule_id="DF002",
+                    severity="medium",
+                    category="docker",
+                    file_path="Dockerfile",
+                    line_number=2,
+                    message="Unpinned package",
+                    remediation="Pin package versions.",
+                ),
+                Finding(
+                    scan_id=scan_uuid,
+                    user_id=STUB_USER_ID,
+                    rule_id="K8S001",
+                    severity="critical",
+                    category="kubernetes",
+                    file_path="deploy.yaml",
+                    line_number=1,
+                    message="Privileged container",
+                    remediation="Drop the privilege flag.",
+                ),
+            ]
+        )
+        session.commit()
+
+    response = client.get(
+        f"/api/scans/{scan_id}/findings",
+        params=[("severity", "high"), ("severity", "critical")],
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert {f["rule_id"] for f in data} == {"DF001", "K8S001"}
+
+
+def test_get_scan_findings_filters_by_category() -> None:
+    scan_id = _create_scan()
+    scan_uuid = uuid.UUID(scan_id)
+
+    with Session(engine) as session:
+        session.add_all(
+            [
+                Finding(
+                    scan_id=scan_uuid,
+                    user_id=STUB_USER_ID,
+                    rule_id="DF001",
+                    severity="high",
+                    category="docker",
+                    file_path="Dockerfile",
+                    line_number=1,
+                    message="Container runs as root",
+                    remediation="Add a USER directive with a non-root user.",
+                ),
+                Finding(
+                    scan_id=scan_uuid,
+                    user_id=STUB_USER_ID,
+                    rule_id="K8S001",
+                    severity="high",
+                    category="kubernetes",
+                    file_path="deploy.yaml",
+                    line_number=1,
+                    message="Privileged container",
+                    remediation="Drop the privilege flag.",
+                ),
+            ]
+        )
+        session.commit()
+
+    response = client.get(f"/api/scans/{scan_id}/findings", params={"category": "kubernetes"})
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["rule_id"] == "K8S001"
+
+
+def test_get_scan_findings_filters_by_severity_and_category() -> None:
+    scan_id = _create_scan()
+    scan_uuid = uuid.UUID(scan_id)
+
+    with Session(engine) as session:
+        session.add_all(
+            [
+                Finding(
+                    scan_id=scan_uuid,
+                    user_id=STUB_USER_ID,
+                    rule_id="DF001",
+                    severity="high",
+                    category="docker",
+                    file_path="Dockerfile",
+                    line_number=1,
+                    message="Container runs as root",
+                    remediation="Add a USER directive with a non-root user.",
+                ),
+                Finding(
+                    scan_id=scan_uuid,
+                    user_id=STUB_USER_ID,
+                    rule_id="K8S001",
+                    severity="high",
+                    category="kubernetes",
+                    file_path="deploy.yaml",
+                    line_number=1,
+                    message="Privileged container",
+                    remediation="Drop the privilege flag.",
+                ),
+                Finding(
+                    scan_id=scan_uuid,
+                    user_id=STUB_USER_ID,
+                    rule_id="DF002",
+                    severity="low",
+                    category="docker",
+                    file_path="Dockerfile",
+                    line_number=2,
+                    message="Unpinned package",
+                    remediation="Pin package versions.",
+                ),
+            ]
+        )
+        session.commit()
+
+    response = client.get(
+        f"/api/scans/{scan_id}/findings",
+        params=[("severity", "high"), ("category", "docker")],
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["rule_id"] == "DF001"
+
+
 def test_get_report_not_found() -> None:
     response = client.get(f"/api/scans/{uuid.uuid4()}/report")
     assert response.status_code == 404

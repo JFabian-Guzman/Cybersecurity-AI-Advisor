@@ -1,9 +1,6 @@
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useFindingsQuery } from '../api/get-findings'
 import { categoryLabel, SEVERITY_BADGE_VARIANT, SEVERITY_RANK } from '../types/findings'
 import type { Finding, Severity } from '../types/findings'
-import { getErrorMessage } from '@/lib/errors'
 import { FindingsAccordion } from './FindingsAccordion'
 import type { FindingsAccordionGroup } from './FindingsAccordion'
 
@@ -42,31 +39,15 @@ function worstSeverity(findings: Finding[]): Severity {
 }
 
 interface FindingsByFileProps {
-  scanId: string
+  findings: Finding[]
 }
 
-export function FindingsByFile({ scanId }: FindingsByFileProps) {
-  const { data, isLoading, isError, error } = useFindingsQuery(scanId)
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-12 w-full" />
-        <Skeleton className="h-12 w-full" />
-      </div>
-    )
-  }
-
-  if (isError) {
-    return <p className="text-destructive">Failed to load findings: {getErrorMessage(error)}</p>
-  }
-
-  if (!data || data.length === 0) {
+export function FindingsByFile({ findings }: FindingsByFileProps) {
+  if (findings.length === 0) {
     return <p className="text-muted-foreground">No findings for this scan.</p>
   }
 
-  const categoryGroups = groupByCategory(data)
+  const categoryGroups = groupByCategory(findings)
 
   return (
     <div className="flex flex-col gap-6">

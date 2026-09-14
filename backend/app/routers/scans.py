@@ -4,7 +4,7 @@ import uuid
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
@@ -64,11 +64,13 @@ def get_scan_findings(
     scan_id: uuid.UUID,
     session: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    severity: Annotated[list[str] | None, Query()] = None,
+    category: Annotated[list[str] | None, Query()] = None,
 ) -> list[FindingResponse]:
     scan = get_scan_service(session, scan_id, current_user.id)
     if scan is None:
         raise HTTPException(status_code=404, detail="Scan not found")
-    findings = get_findings_by_scan_id(session, scan.id, current_user.id)
+    findings = get_findings_by_scan_id(session, scan.id, current_user.id, severity, category)
     return [FindingResponse.model_validate(f) for f in findings]
 
 
