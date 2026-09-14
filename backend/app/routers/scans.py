@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
 from app.jobs import run_scan
-from app.models import User
+from app.models import Scan, User
 from app.schemas.finding import FindingResponse
 from app.schemas.report import ReportResponse
 from app.schemas.scan import ScanCreate, ScanResponse
@@ -24,6 +24,36 @@ from app.worker import get_queue
 log = structlog.get_logger()
 
 router = APIRouter(prefix="/api/scans", tags=["scans"])
+
+
+def _get_succeeded_scan_with_report(
+    scan_id: uuid.UUID,
+    session: Session,
+    current_user: User,
+) -> tuple[Scan, object]:
+    """Return (scan, report) or raise the appropriate HTTP error.
+
+    Enforces the three-step access guard shared by report-related endpoints:
+      404 — scan not found or not owned by the current user
+      409 — scan exists but has not succeeded yet
+      404 — scan succeeded but has no report (shouldn't happen in production;
+             guards against incomplete pipeline runs during development)
+    """
+    scan = get_scan_service(session, scan_id, current_user.id)
+    if scan is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+
+    if scan.status != "succeeded":
+        raise HTTPException(
+            status_code=409,
+            detail=f"Report is not available while the scan is {scan.status}",
+        )
+
+    report = get_report_by_scan_id(session, scan.id, current_user.id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    return scan, report
 
 
 @router.post("", response_model=ScanResponse, status_code=201)
@@ -78,18 +108,5 @@ def get_scan_report(
     session: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ReportResponse:
-    scan = get_scan_service(session, scan_id, current_user.id)
-    if scan is None:
-        raise HTTPException(status_code=404, detail="Scan not found")
-
-    if scan.status != "succeeded":
-        raise HTTPException(
-            status_code=409,
-            detail=f"Report is not available while the scan is {scan.status}",
-        )
-
-    report = get_report_by_scan_id(session, scan.id, current_user.id)
-    if report is None:
-        raise HTTPException(status_code=404, detail="Report not found")
-
+    _scan, report = _get_succeeded_scan_with_report(scan_id, session, current_user)
     return ReportResponse.model_validate(report)
