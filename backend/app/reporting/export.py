@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 from app.models import Report
 
+_SEVERITY_ORDER = ("critical", "high", "medium", "low", "info")
+
 
 @dataclass(frozen=True)
 class ExportDocument:
@@ -46,3 +48,57 @@ def build_export_document(report: Report, repo_name: str) -> ExportDocument:
         rule_counts=dict(report.rule_counts),
         category_counts=dict(report.category_counts),
     )
+
+
+def render_markdown(doc: ExportDocument) -> bytes:
+    """Render an :class:`ExportDocument` as UTF-8 encoded Markdown.
+
+    The output is deterministic: sections always appear in the same order and
+    severity rows follow CRITICAL → HIGH → MEDIUM → LOW → INFO regardless of
+    the order they are stored in the database.
+
+    Args:
+        doc: The format-agnostic export document produced by
+            :func:`build_export_document`.
+
+    Returns:
+        UTF-8 encoded Markdown bytes suitable for a ``text/markdown`` HTTP response.
+    """
+    lines: list[str] = []
+
+    # Header
+    lines.append(f"# Security Report — {doc.repo_name}")
+    lines.append("")
+    lines.append(f"**Scan ID:** `{doc.scan_id}`")
+    lines.append(f"**Total findings:** {doc.total_findings}")
+    lines.append("")
+
+    # Severity breakdown
+    lines.append("## Findings by Severity")
+    lines.append("")
+    lines.append("| Severity | Count |")
+    lines.append("|----------|-------|")
+    for severity in _SEVERITY_ORDER:
+        count = doc.severity_counts.get(severity, 0)
+        lines.append(f"| {severity.capitalize()} | {count} |")
+    lines.append("")
+
+    # Category breakdown
+    lines.append("## Findings by Category")
+    lines.append("")
+    lines.append("| Category | Count |")
+    lines.append("|----------|-------|")
+    for category, count in sorted(doc.category_counts.items()):
+        lines.append(f"| {category.capitalize()} | {count} |")
+    lines.append("")
+
+    # Rule breakdown
+    lines.append("## Findings by Rule")
+    lines.append("")
+    lines.append("| Rule ID | Count |")
+    lines.append("|---------|-------|")
+    for rule_id, count in sorted(doc.rule_counts.items()):
+        lines.append(f"| {rule_id} | {count} |")
+    lines.append("")
+
+    return "\n".join(lines).encode("utf-8")
