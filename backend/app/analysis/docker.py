@@ -133,7 +133,7 @@ def _check_tags(path: str, lines: list[str]) -> list[Finding]:
         findings.append(
             Finding(
                 rule_id="DF002",
-                severity="MEDIUM",
+                severity="LOW",
                 file=path,
                 line=line_no,
                 message=message,
@@ -253,7 +253,7 @@ def _pinning_finding(path: str, line_no: int, package: str, manager: str) -> Fin
     operator = _PIN_OPERATOR.get(manager, "=")
     return Finding(
         rule_id="DF005",
-        severity="MEDIUM",
+        severity="LOW",
         file=path,
         line=line_no,
         message=f'Package "{package}" installed via {manager} without a version pin.',

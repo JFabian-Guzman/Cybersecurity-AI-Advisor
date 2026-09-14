@@ -95,16 +95,16 @@ has been identified yet.
 | Rule ID | Severity | Description |
 |---------|----------|-------------|
 | DF001 | HIGH | No `USER` directive — container runs as root |
-| DF002 | MEDIUM | Base image uses `:latest` tag or is untagged |
+| DF002 | LOW | Base image uses `:latest` tag or is untagged |
 | DF003 | CRITICAL | Hardcoded secret in `ENV` or `ARG` default value |
 | DF004 | HIGH | `ADD` used to fetch a remote URL |
-| DF005 | MEDIUM | Package install (`apt-get`, `pip`, `npm`, etc.) without version pinning |
+| DF005 | LOW | Package install (`apt-get`, `pip`, `npm`, etc.) without version pinning |
 
 ### Kubernetes (S2.1 — 5 checks)
 
 | Rule ID | Severity | Description |
 |---------|----------|-------------|
-| K8S001 | HIGH | Privileged container (`securityContext.privileged: true`) |
+| K8S001 | CRITICAL | Privileged container (`securityContext.privileged: true`) |
 | K8S002 | HIGH | `hostNetwork`, `hostPID`, or `hostIPC` set to `true` |
 | K8S003 | MEDIUM | Container missing resource `requests`/`limits` (cpu and/or memory) |
 | K8S004 | HIGH | `allowPrivilegeEscalation` not explicitly set to `false` |

@@ -1,6 +1,6 @@
 findings:
   - rule_id:  DF005
-    severity: MEDIUM
+    severity: LOW
     file:     Dockerfile
     line:     3
     message: >
@@ -8,7 +8,7 @@ findings:
       versions (e.g. curl=7.88.1-10) so builds are reproducible and not
       silently upgraded to a vulnerable release.
   - rule_id:  DF005
-    severity: MEDIUM
+    severity: LOW
     file:     Dockerfile
     line:     4
     message: >
