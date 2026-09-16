@@ -46,6 +46,7 @@ target-version = ["py314"]
 
 [tool.mypy]
 python_version = "3.14"
+explicit_package_bases = true
 ignore_missing_imports = true
 check_untyped_defs = true
 warn_unused_ignores = true

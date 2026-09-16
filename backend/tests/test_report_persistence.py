@@ -2,29 +2,13 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.db.db import engine
-from app.main import app
 from app.models import Finding, Report, Scan
 from app.reporting.generate import generate_report
 from app.services.user_services import STUB_USER_ID
-
-client = TestClient(app)
-
-
-def _create_scan() -> uuid.UUID:
-    connect_response = client.post(
-        "/api/repositories",
-        json={"url": "https://github.com/example/repo", "name": "test-repo"},
-    )
-    assert connect_response.status_code == 201
-    repository_id = connect_response.json()["id"]
-
-    scan_response = client.post("/api/scans", json={"repository_id": repository_id})
-    assert scan_response.status_code == 201
-    return uuid.UUID(scan_response.json()["id"])
+from tests.conftest import create_scan
 
 
 def _seed_findings(session: Session, scan_id: uuid.UUID) -> None:
@@ -52,7 +36,7 @@ def _seed_findings(session: Session, scan_id: uuid.UUID) -> None:
 
 
 def test_generate_report_persists_counts() -> None:
-    scan_id = _create_scan()
+    scan_id = create_scan()
 
     with Session(engine) as session:
         _seed_findings(session, scan_id)
@@ -73,7 +57,7 @@ def test_generate_report_persists_counts() -> None:
 
 
 def test_generate_report_replaces_previous_run() -> None:
-    scan_id = _create_scan()
+    scan_id = create_scan()
 
     with Session(engine) as session:
         _seed_findings(session, scan_id)
@@ -91,7 +75,7 @@ def test_generate_report_replaces_previous_run() -> None:
 
 
 def test_generate_report_with_no_findings() -> None:
-    scan_id = _create_scan()
+    scan_id = create_scan()
 
     with Session(engine) as session:
         scan = session.get(Scan, scan_id)
