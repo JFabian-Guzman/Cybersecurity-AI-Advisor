@@ -24,7 +24,7 @@ fields:
     description: Human-readable explanation plus a remediation hint.
 
 severity_guide:
-  CRITICAL: Exploitable secret or credential exposure; immediate compromise risk.
+  CRITICAL: Exploitable secret/credential exposure, or a misconfiguration granting immediate, full host/system compromise.
   HIGH: Direct security weakening, e.g. running as root or fetching unverified remote content.
   MEDIUM: Hardening gap that increases blast radius but isn't directly exploitable.
   LOW: Best-practice deviation with minimal direct security impact.
@@ -32,7 +32,7 @@ severity_guide:
 
 rules:
   - id: K8S001
-    severity: HIGH
+    severity: CRITICAL
     description: Privileged container (securityContext.privileged true).
   - id: K8S002
     severity: HIGH

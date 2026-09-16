@@ -100,7 +100,7 @@ def _check_privileged(path: str, pod_spec: dict[str, Any]) -> list[Finding]:
         findings.append(
             Finding(
                 rule_id="K8S001",
-                severity="HIGH",
+                severity="CRITICAL",
                 file=path,
                 line=_key_line(security_context, "privileged"),
                 message=(
