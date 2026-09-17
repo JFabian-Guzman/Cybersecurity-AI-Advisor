@@ -17,6 +17,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "docker>=7.1.0",
     "python-dotenv>=1.2.2",
+    "reportlab>=5.0.1",
 ]
 
 [dependency-groups]
@@ -29,6 +30,7 @@ dev = [
     "pyyaml>=6.0.3",
     "poethepoet>=0.48.0",
     "watchfiles>=1.2.0",
+    "pypdf>=6.19.0",
 ]
 
 [tool.ruff]
