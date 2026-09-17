@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 import app.jobs as jobs
 from app.main import app
 from app.models import Report
-from app.reporting.export import ExportDocument, build_export_document, render_markdown
+from app.reporting.export import ExportDocument, build_export_document, render_markdown, render_pdf
 from app.services.user_services import STUB_USER_ID
 from tests.conftest import create_scan
 
@@ -46,7 +46,6 @@ def test_build_export_document_copies_counts() -> None:
     assert doc.severity_counts == report.severity_counts
     assert doc.rule_counts == report.rule_counts
     assert doc.category_counts == report.category_counts
-    # Mutations to the original report dict must not affect the ExportDocument
     report.severity_counts["critical"] = 99
     assert doc.severity_counts["critical"] == 1
 
@@ -103,7 +102,55 @@ def test_render_markdown_zero_findings() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Integration tests — HTTP endpoint
+# Unit tests — PDF renderer
+# ---------------------------------------------------------------------------
+
+
+def test_render_pdf_produces_valid_pdf() -> None:
+    """The output bytes must be a parseable PDF — not just non-empty."""
+    from io import BytesIO
+
+    import pypdf
+
+    doc = ExportDocument(
+        scan_id=uuid.uuid4(),
+        repo_name="test-repo",
+        repo_slug="test-repo",
+        total_findings=3,
+        severity_counts={"critical": 1, "high": 1, "medium": 0, "low": 1, "info": 0},
+        rule_counts={"DF001": 2, "K8S001": 1},
+        category_counts={"docker": 2, "kubernetes": 1},
+    )
+    pdf_bytes = render_pdf(doc)
+
+    assert pdf_bytes[:4] == b"%PDF", "Output does not start with PDF magic bytes"
+
+    reader = pypdf.PdfReader(BytesIO(pdf_bytes))
+    assert len(reader.pages) >= 1
+
+
+def test_render_pdf_zero_findings_does_not_crash() -> None:
+    """A scan with no findings must still produce a valid PDF."""
+    from io import BytesIO
+
+    import pypdf
+
+    doc = ExportDocument(
+        scan_id=uuid.uuid4(),
+        repo_name="clean-repo",
+        repo_slug="clean-repo",
+        total_findings=0,
+        severity_counts={"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0},
+        rule_counts={},
+        category_counts={},
+    )
+    pdf_bytes = render_pdf(doc)
+    reader = pypdf.PdfReader(BytesIO(pdf_bytes))
+    assert len(reader.pages) >= 1
+
+
+# ---------------------------------------------------------------------------
+# Integration tests — HTTP endpoint (Markdown)
 # ---------------------------------------------------------------------------
 
 
@@ -159,7 +206,6 @@ def test_export_markdown_content_is_valid(monkeypatch: pytest.MonkeyPatch) -> No
 
 def test_export_returns_409_when_scan_not_succeeded() -> None:
     scan_id = create_scan()
-    # Scan is still in "queued" status — no run_scan called
     resp = client.get(f"/api/scans/{scan_id}/report/export?format=markdown")
     assert resp.status_code == 409
 
@@ -174,3 +220,36 @@ def test_export_returns_422_for_invalid_format(monkeypatch: pytest.MonkeyPatch) 
     _run_scan_with_monkeypatch(scan_id, monkeypatch)
     resp = client.get(f"/api/scans/{scan_id}/report/export?format=docx")
     assert resp.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Integration tests — HTTP endpoint (PDF)
+# ---------------------------------------------------------------------------
+
+
+def test_export_pdf_returns_200_with_attachment(monkeypatch: pytest.MonkeyPatch) -> None:
+    scan_id = create_scan()
+    _run_scan_with_monkeypatch(scan_id, monkeypatch)
+
+    resp = client.get(f"/api/scans/{scan_id}/report/export?format=pdf")
+    assert resp.status_code == 200
+    assert resp.headers["content-type"] == "application/pdf"
+    assert "attachment" in resp.headers["content-disposition"]
+    assert ".pdf" in resp.headers["content-disposition"]
+
+
+def test_export_pdf_content_is_valid_pdf(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The bytes returned by the endpoint must be a parseable PDF."""
+    from io import BytesIO
+
+    import pypdf
+
+    scan_id = create_scan()
+    _run_scan_with_monkeypatch(scan_id, monkeypatch)
+
+    resp = client.get(f"/api/scans/{scan_id}/report/export?format=pdf")
+    assert resp.status_code == 200
+    assert resp.content[:4] == b"%PDF"
+
+    reader = pypdf.PdfReader(BytesIO(resp.content))
+    assert len(reader.pages) >= 1
