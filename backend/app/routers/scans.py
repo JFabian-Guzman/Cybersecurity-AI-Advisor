@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
 from app.jobs import run_scan
-from app.models import Scan, User
+from app.models import Report, Scan, User
 from app.reporting.export import build_export_document, render_markdown, render_pdf
 from app.schemas.finding import FindingResponse
 from app.schemas.report import ReportResponse
@@ -32,7 +32,7 @@ def _get_succeeded_scan_with_report(
     scan_id: uuid.UUID,
     session: Session,
     current_user: User,
-) -> tuple[Scan, object]:
+) -> tuple[Scan, Report]:
     """Return (scan, report) or raise the appropriate HTTP error.
 
     Enforces the three-step access guard shared by report-related endpoints:
