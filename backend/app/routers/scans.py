@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_db
 from app.jobs import run_scan
 from app.models import Report, Scan, User
-from app.reporting.export import build_export_document, render_markdown
+from app.reporting.export import build_export_document, render_markdown, render_pdf
 from app.schemas.finding import FindingResponse
 from app.schemas.report import ReportResponse
 from app.schemas.scan import ScanCreate, ScanResponse
@@ -126,13 +126,14 @@ def export_scan_report(
     """Export the scan report as a downloadable file.
 
     Query parameters:
-        format: ``markdown`` (default) or ``pdf``.
+        format: ``markdown`` or ``pdf``.
 
     Responses:
         200 text/markdown — Markdown export with Content-Disposition attachment.
+        200 application/pdf — PDF export with Content-Disposition attachment.
         409 — Scan has not succeeded yet.
         404 — Scan not owned by the current user, or report missing.
-        422 — ``format`` is not ``markdown`` or ``pdf`` (FastAPI validates ``Literal``).
+        422 — ``format`` is not ``markdown`` or ``pdf``.
     """
     scan, report = _get_succeeded_scan_with_report(scan_id, session, current_user)
 
@@ -148,5 +149,11 @@ def export_scan_report(
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    # format == "pdf" — renderer lives in feature/report-export-pdf
-    raise HTTPException(status_code=501, detail="PDF export is not yet implemented")
+    # format == "pdf"
+    content = render_pdf(doc)
+    filename = f"{doc.repo_slug}-{doc.scan_id}.pdf"
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
