@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 if TYPE_CHECKING:
+    from app.models.chunk import Chunk
     from app.models.finding import Finding
     from app.models.report import Report
     from app.models.repository import Repository
@@ -33,3 +34,4 @@ class Scan(Base):
     repository: Mapped[Repository] = relationship("Repository", back_populates="scans")
     findings: Mapped[list[Finding]] = relationship("Finding", back_populates="scan")
     report: Mapped[Report | None] = relationship("Report", back_populates="scan", uselist=False)
+    chunks: Mapped[list[Chunk]] = relationship("Chunk", back_populates="scan")
