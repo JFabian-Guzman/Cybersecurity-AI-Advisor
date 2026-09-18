@@ -55,6 +55,62 @@ def test_get_scan_owned_by_another_user_is_not_found() -> None:
     assert response.status_code == 404
 
 
+def test_retry_scan_not_found() -> None:
+    response = client.post(f"/api/scans/{uuid.uuid4()}/retry")
+    assert response.status_code == 404
+
+
+def test_retry_scan_owned_by_another_user_is_not_found() -> None:
+    scan_id = _create_foreign_scan()
+    response = client.post(f"/api/scans/{scan_id}/retry")
+    assert response.status_code == 404
+
+
+def test_retry_succeeded_scan_conflicts() -> None:
+    scan_id = _create_scan()
+    with Session(engine) as session:
+        scan = session.get(Scan, uuid.UUID(scan_id))
+        assert scan is not None
+        scan.status = "succeeded"
+        scan.error = None
+        session.commit()
+
+    response = client.post(f"/api/scans/{scan_id}/retry")
+    assert response.status_code == 409
+
+
+def test_retry_failed_scan_resets_status_and_error() -> None:
+    scan_id = _create_scan()
+    with Session(engine) as session:
+        scan = session.get(Scan, uuid.UUID(scan_id))
+        assert scan is not None
+        scan.status = "failed"
+        scan.error = "Sandbox exited with code 1"
+        session.commit()
+
+    response = client.post(f"/api/scans/{scan_id}/retry")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == scan_id
+    assert data["status"] == "queued"
+    assert data["error"] is None
+    assert data["started_at"] is None
+    assert data["finished_at"] is None
+
+
+def test_retry_stuck_running_scan_resets_to_queued() -> None:
+    scan_id = _create_scan()
+    with Session(engine) as session:
+        scan = session.get(Scan, uuid.UUID(scan_id))
+        assert scan is not None
+        scan.status = "running"
+        session.commit()
+
+    response = client.post(f"/api/scans/{scan_id}/retry")
+    assert response.status_code == 200
+    assert response.json()["status"] == "queued"
+
+
 def test_get_scan_findings_owned_by_another_user_is_not_found() -> None:
     scan_id = _create_foreign_scan()
     response = client.get(f"/api/scans/{scan_id}/findings")
