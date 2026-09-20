@@ -133,3 +133,13 @@ every PR into `develop`/`main` and every branch push.
 
 - Default React version: 19.2.6
 - Default Python version: 3.14
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for this repo (via the `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
