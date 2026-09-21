@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2026-06-29
-- Deciders: Dev A
+- Deciders: Andrés Víquez
 
 ## Context
 
