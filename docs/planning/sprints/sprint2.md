@@ -1,7 +1,7 @@
 # Sprint 2 — Kubernetes Analysis, Persistence & Reporting
 
 Continues from Sprint 1 (repository ingestion, sandboxing, Dockerfile analysis — see
-sprints/sprint1.md). 
+[sprint1.md](sprint1.md)). 
 
 Target: MVP 1 close-out groundwork (MVP 1 completes end of Sprint 3 per PLAN.md).
 
