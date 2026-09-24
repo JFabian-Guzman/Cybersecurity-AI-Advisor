@@ -5,7 +5,9 @@ import { useConnectRepositoryMutation } from '../api/connect-repository'
 import { useCreateScanMutation } from '../api/create-scan'
 import { getErrorMessage } from '@/lib/errors'
 import { RepositoriesTable } from './RepositoriesTable'
+import { RepositoryScansModal } from './RepositoryScansModal'
 import { useRepositoryByUserQuery } from '../api/get-repositories-by-user'
+import type { Repository } from '../types/repository'
 
 interface ConnectRepositoryFormProps {
   onConnected: (scanId: string, repositoryName: string) => void
@@ -34,9 +36,7 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
     // TODO: implement scan retry
   }
 
-  const handleViewDetails = () => {
-    // TODO: implement view scan details navigation
-  }
+  const [selectedRepository, setSelectedRepository] = useState<Repository | null>(null)
 
   const PAGE_SIZE = 5
   const [page, setPage] = useState(1)
@@ -87,7 +87,14 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
         pageSize={PAGE_SIZE}
         onPageChange={setPage}
         onRetry={handleRetry}
-        onViewDetails={handleViewDetails}
+        onViewDetails={setSelectedRepository}
+      />
+      <RepositoryScansModal
+        repository={selectedRepository}
+        open={!!selectedRepository}
+        onOpenChange={(open) => {
+          if (!open) setSelectedRepository(null)
+        }}
       />
     </>
   )

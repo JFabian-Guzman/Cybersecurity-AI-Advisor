@@ -1,21 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api-client'
+import type { Scan } from '../types/scan'
 
 export const SCAN_POLL_TIMEOUT_MS = 5 * 60 * 1000
 const SCAN_POLL_INTERVAL_MS = 2000
-
-export type ScanState = 'queued' | 'running' | 'succeeded' | 'failed'
-
-export interface Scan {
-  id: string
-  repository_id: string
-  repository_name: string
-  status: ScanState
-  error: string | null
-  started_at: string | null
-  finished_at: string | null
-}
+export type { Scan, ScanState } from '../types/scan'
 
 export class ScanStuckError extends Error {
   constructor() {

@@ -28,6 +28,7 @@ def create_repository(db: Session, repository: RepositoryCreate) -> Repository:
     db.refresh(db_repository)
     return db_repository
 
+
 def get_repositories_by_user(db: Session, user_id: uuid.UUID, limit: int, offset: int) -> list[Repository]:
     return (
         db.query(Repository)
