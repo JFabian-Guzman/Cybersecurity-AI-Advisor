@@ -27,3 +27,17 @@ def create_repository(db: Session, repository: RepositoryCreate) -> Repository:
     db.commit()
     db.refresh(db_repository)
     return db_repository
+
+def get_repositories_by_user(db: Session, user_id: uuid.UUID, limit: int, offset: int) -> list[Repository]:
+    return (
+        db.query(Repository)
+        .filter(Repository.user_id == user_id)
+        .order_by(Repository.id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+def count_repositories_by_user(db: Session, user_id: uuid.UUID) -> int:
+    return db.query(Repository).filter(Repository.user_id == user_id).count()

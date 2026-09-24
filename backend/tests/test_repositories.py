@@ -57,3 +57,26 @@ def test_connect_repository_invalid_url() -> None:
 def test_get_scan_not_found() -> None:
     response = client.get("/api/scans/00000000-0000-0000-0000-000000000999")
     assert response.status_code == 404
+
+
+def test_list_repositories_paginates_with_limit_and_offset() -> None:
+    for i in range(12):
+        client.post(
+            "/api/repositories",
+            json={"url": f"https://github.com/example/paginated-repo-{i}", "name": f"paginated-repo-{i}"},
+        )
+
+    first_page = client.get("/api/repositories", params={"limit": 10, "offset": 0})
+    assert first_page.status_code == 200
+    first_data = first_page.json()
+    assert len(first_data["items"]) == 10
+    assert first_data["total"] >= 12
+
+    second_page = client.get("/api/repositories", params={"limit": 10, "offset": 10})
+    assert second_page.status_code == 200
+    second_data = second_page.json()
+    assert len(second_data["items"]) >= 2
+
+    first_ids = {item["id"] for item in first_data["items"]}
+    second_ids = {item["id"] for item in second_data["items"]}
+    assert first_ids.isdisjoint(second_ids)

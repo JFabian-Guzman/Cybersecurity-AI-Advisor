@@ -32,3 +32,8 @@ class RepositoryListItem(BaseModel):
     source_type: str
 
     model_config = {"from_attributes": True}
+
+
+class RepositoryListResponse(BaseModel):
+    items: list[RepositoryResponse]
+    total: int
