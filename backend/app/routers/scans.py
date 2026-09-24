@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from typing import Annotated, Literal
 
 import structlog
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from fastapi.responses import Response
+from redis.exceptions import RedisError
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
@@ -17,6 +19,7 @@ from app.schemas.report import ReportResponse
 from app.schemas.scan import ScanCreate, ScanResponse, ScanUpdate
 from app.services.findings_services import get_findings_by_scan_id
 from app.services.report_services import get_report_by_scan_id
+from app.services.repository_services import get_repository_by_id
 from app.services.scan_services import create_scan as create_scan_service
 from app.services.scan_services import get_scan as get_scan_service
 from app.services.scan_services import to_scan_response
@@ -59,12 +62,34 @@ def _get_succeeded_scan_with_report(
     return scan, report
 
 
+def _enqueue_scan(session: Session, scan: Scan) -> Scan:
+    """Enqueue the scan job; if the queue is unreachable, fail the scan instead of orphaning it as `queued`."""
+    try:
+        get_queue().enqueue(run_scan, scan.id)
+    except RedisError as exc:
+        log.error("scan.enqueue_failed", scan_id=str(scan.id), error=str(exc))
+        failed = update_scan_service(
+            session,
+            scan.id,
+            ScanUpdate(
+                status="failed",
+                error="Could not enqueue scan: job queue unavailable",
+                finished_at=datetime.now(UTC),
+            ),
+        )
+        return failed or scan
+    return scan
+
+
 @router.post("", response_model=ScanResponse, status_code=201)
 def create_scan(
     repository_id: Annotated[uuid.UUID, Body(embed=True)],
     session: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ScanResponse:
+    if get_repository_by_id(session, repository_id, current_user.id) is None:
+        raise HTTPException(status_code=404, detail="Repository not found")
+
     scan = create_scan_service(
         session,
         ScanCreate(
@@ -74,8 +99,8 @@ def create_scan(
         ),
     )
 
-    get_queue().enqueue(run_scan, scan.id)
-    log.info("scan.triggered", repo_id=str(repository_id), scan_id=str(scan.id))
+    scan = _enqueue_scan(session, scan)
+    log.info("scan.triggered", repo_id=str(repository_id), scan_id=str(scan.id), status=scan.status)
 
     return to_scan_response(scan)
 
@@ -113,8 +138,8 @@ def retry_scan(
     if updated is None:
         raise HTTPException(status_code=500, detail="Failed to reset scan")
 
-    get_queue().enqueue(run_scan, scan.id)
-    log.info("scan.retry_triggered", scan_id=str(scan.id))
+    updated = _enqueue_scan(session, updated)
+    log.info("scan.retry_triggered", scan_id=str(scan.id), status=updated.status)
 
     return to_scan_response(updated)
 
