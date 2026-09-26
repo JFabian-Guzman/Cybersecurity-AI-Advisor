@@ -100,7 +100,9 @@ export function RepositoryScansModal({
             ) : (
               scans.map((scan) => (
                 <TableRow key={scan.id}>
-                  <TableCell className="whitespace-nowrap">{formatDateTime(scan.created_at)}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {formatDateTime(scan.created_at)}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={STATUS_BADGE_VARIANT[scan.status]}>{scan.status}</Badge>
                   </TableCell>
