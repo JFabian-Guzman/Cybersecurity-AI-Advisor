@@ -12,6 +12,10 @@ def get_repository(db: Session, user_id: uuid.UUID, source_ref: str) -> Reposito
     return db.query(Repository).filter(Repository.user_id == user_id, Repository.source_ref == source_ref).first()
 
 
+def get_repository_by_id(db: Session, repository_id: uuid.UUID, user_id: uuid.UUID) -> Repository | None:
+    return db.query(Repository).filter(Repository.id == repository_id, Repository.user_id == user_id).first()
+
+
 def create_repository(db: Session, repository: RepositoryCreate) -> Repository:
     db_repository = Repository(
         user_id=repository.user_id,
