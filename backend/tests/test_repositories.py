@@ -28,7 +28,10 @@ def test_connect_repository_returns_repository() -> None:
 
 
 def test_connect_repository_is_idempotent_by_source_ref() -> None:
-    body = {"url": "https://github.com/example/idempotent-repo", "name": "idempotent-repo"}
+    body = {
+        "url": "https://github.com/example/idempotent-repo",
+        "name": "idempotent-repo",
+    }
 
     first = client.post("/api/repositories", json=body)
     second = client.post("/api/repositories", json=body)
@@ -41,7 +44,10 @@ def test_connect_repository_is_idempotent_by_source_ref() -> None:
 def test_create_scan_creates_scan() -> None:
     connect_response = client.post(
         "/api/repositories",
-        json={"url": "https://github.com/example/create-scan-repo", "name": "create-scan-repo"},
+        json={
+            "url": "https://github.com/example/create-scan-repo",
+            "name": "create-scan-repo",
+        },
     )
     assert connect_response.status_code == 201
     repository_id = connect_response.json()["id"]
@@ -83,7 +89,12 @@ def test_list_repositories_includes_last_scan_status() -> None:
         now = datetime.now(UTC)
         session.add_all(
             [
-                Scan(repository_id=scanned_repo.id, user_id=STUB_USER_ID, status="failed", created_at=now),
+                Scan(
+                    repository_id=scanned_repo.id,
+                    user_id=STUB_USER_ID,
+                    status="failed",
+                    created_at=now,
+                ),
                 Scan(
                     repository_id=scanned_repo.id,
                     user_id=STUB_USER_ID,
@@ -113,7 +124,10 @@ def test_list_repositories_paginates_with_limit_and_offset() -> None:
     for i in range(12):
         client.post(
             "/api/repositories",
-            json={"url": f"https://github.com/example/paginated-repo-{i}", "name": f"paginated-repo-{i}"},
+            json={
+                "url": f"https://github.com/example/paginated-repo-{i}",
+                "name": f"paginated-repo-{i}",
+            },
         )
 
     first_page = client.get("/api/repositories", params={"limit": 10, "offset": 0})

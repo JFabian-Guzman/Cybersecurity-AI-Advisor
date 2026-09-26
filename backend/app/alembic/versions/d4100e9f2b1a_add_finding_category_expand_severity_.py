@@ -20,7 +20,10 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("findings", sa.Column("category", sa.String(32), nullable=False, server_default="docker"))
+    op.add_column(
+        "findings",
+        sa.Column("category", sa.String(32), nullable=False, server_default="docker"),
+    )
 
     op.execute("ALTER TYPE severity_enum RENAME TO severity_enum_old")
     sa.Enum("critical", "high", "medium", "low", "info", name="severity_enum").create(op.get_bind())

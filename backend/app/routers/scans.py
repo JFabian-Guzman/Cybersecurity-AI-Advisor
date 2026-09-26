@@ -100,7 +100,12 @@ def create_scan(
     )
 
     scan = _enqueue_scan(session, scan)
-    log.info("scan.triggered", repo_id=str(repository_id), scan_id=str(scan.id), status=scan.status)
+    log.info(
+        "scan.triggered",
+        repo_id=str(repository_id),
+        scan_id=str(scan.id),
+        status=scan.status,
+    )
 
     return to_scan_response(scan)
 

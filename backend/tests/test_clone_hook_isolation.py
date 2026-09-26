@@ -49,7 +49,17 @@ def test_hook_fixture_is_capable_of_executing(malicious_template: tuple[str, Pat
     source_url, sentinel = malicious_template
     dest = tmp_path / "control"
     subprocess.run(
-        ["git", "clone", "--quiet", "--no-checkout", "--depth", "1", "--", source_url, str(dest)],
+        [
+            "git",
+            "clone",
+            "--quiet",
+            "--no-checkout",
+            "--depth",
+            "1",
+            "--",
+            source_url,
+            str(dest),
+        ],
         check=True,
         capture_output=True,
         text=True,
