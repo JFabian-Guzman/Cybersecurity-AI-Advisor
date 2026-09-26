@@ -13,5 +13,7 @@ that supersedes the old one rather than editing history.
 
 ## Index
 
-- [0001 - Technology stack and branching strategy](0001-technology-stack-and-branching-strategy.md)
+- [0001 - Technology stack](0001-technology-stack.md)
 - [0002 - Sandbox isolation mechanism](0002-sandbox-isolation-mechanism.md)
+- [0003 - Chunking in worker](0003-chunking-in-worker.md)
+- [0004 - Branching strategy](0004-branching-strategy.md)
