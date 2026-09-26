@@ -28,6 +28,7 @@ import { Info } from 'lucide-react'
 import { useScansByRepositoryQuery } from '../api/get-scans-by-repository'
 import type { Repository } from '../types/repository'
 import type { ScanState } from '../types/scan'
+import { formatDateTime } from '@/lib/format-date'
 
 interface RepositoryScansModalProps {
   repository: Repository | null
@@ -77,6 +78,7 @@ export function RepositoryScansModal({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Created</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Error</TableHead>
               <TableHead className="text-right">Details</TableHead>
@@ -85,19 +87,20 @@ export function RepositoryScansModal({
           <TableBody>
             {isPending ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center">
+                <TableCell colSpan={4} className="text-center">
                   <Spinner className="mx-auto" />
                 </TableCell>
               </TableRow>
             ) : scans.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground">
+                <TableCell colSpan={4} className="text-center text-muted-foreground">
                   No scans yet
                 </TableCell>
               </TableRow>
             ) : (
               scans.map((scan) => (
                 <TableRow key={scan.id}>
+                  <TableCell className="whitespace-nowrap">{formatDateTime(scan.created_at)}</TableCell>
                   <TableCell>
                     <Badge variant={STATUS_BADGE_VARIANT[scan.status]}>{scan.status}</Badge>
                   </TableCell>
