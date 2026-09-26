@@ -8,7 +8,7 @@ export async function getRepositoryByUser(
   offset: number,
 ): Promise<RepositoryListResponse> {
   const { data } = await apiClient.get<RepositoryListResponse>('/api/repositories', {
-    params: { user_id, limit, offset }
+    params: { user_id, limit, offset },
   })
   return data
 }
@@ -17,5 +17,13 @@ export const useRepositoryByUserQuery = (user_id: string, limit: number, offset:
   return useQuery({
     queryKey: ['repositories', user_id, limit, offset],
     queryFn: () => getRepositoryByUser(user_id, limit, offset),
+    refetchInterval: (query) => {
+      const items = query.state.data?.items ?? []
+      const hasActiveScan = items.some(
+        (repository) =>
+          repository.last_scan_status === 'queued' || repository.last_scan_status === 'running',
+      )
+      return hasActiveScan ? 2000 : false
+    },
   })
 }

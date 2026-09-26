@@ -22,18 +22,20 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
   const isError = connectRepository.isError || createScan.isError
   const error = connectRepository.error ?? createScan.error
 
-  const handleSubmit = (url: string) => {
-    connectRepository.mutate(url, {
-      onSuccess: (repository) => {
-        createScan.mutate(repository.id, {
-          onSuccess: (scan) => onConnected(scan.id, repository.name),
-        })
-      },
+  const startScan = (repositoryId: string, repositoryName: string) => {
+    createScan.mutate(repositoryId, {
+      onSuccess: (scan) => onConnected(scan.id, repositoryName),
     })
   }
 
-  const handleRetry = () => {
-    // TODO: implement scan retry
+  const handleSubmit = (url: string) => {
+    connectRepository.mutate(url, {
+      onSuccess: (repository) => startScan(repository.id, repository.name),
+    })
+  }
+
+  const handleRetry = (repository: Repository) => {
+    startScan(repository.id, repository.name)
   }
 
   const [selectedRepository, setSelectedRepository] = useState<Repository | null>(null)

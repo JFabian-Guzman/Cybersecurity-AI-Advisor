@@ -66,33 +66,44 @@ export function RepositoriesTable({
               </TableCell>
             </TableRow>
           ) : (
-            repositories.map((repository) => (
-              <TableRow key={repository.id}>
-                <TableCell className="font-medium">{repository.name}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Retry scan"
-                      title="Retry scan"
-                      onClick={() => onRetry(repository)}
-                    >
-                      <RotateCwIcon className="size-5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="View scan details"
-                      title="View scan details"
-                      onClick={() => onViewDetails(repository)}
-                    >
-                      <Info className="size-5" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
+            repositories.map((repository) => {
+              const isScanning =
+                repository.last_scan_status === 'queued' ||
+                repository.last_scan_status === 'running'
+
+              return (
+                <TableRow key={repository.id}>
+                  <TableCell className="font-medium">{repository.name}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Retry scan"
+                        title="Retry scan"
+                        disabled={isScanning}
+                        onClick={() => onRetry(repository)}
+                      >
+                        {isScanning ? (
+                          <Spinner className="size-5" />
+                        ) : (
+                          <RotateCwIcon className="size-5" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="View scan details"
+                        title="View scan details"
+                        onClick={() => onViewDetails(repository)}
+                      >
+                        <Info className="size-5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })
           )}
         </TableBody>
       </Table>

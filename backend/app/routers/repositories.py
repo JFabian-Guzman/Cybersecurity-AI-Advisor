@@ -60,7 +60,16 @@ def list_repositories(
     repositories = get_repositories_by_user(session, current_user.id, limit, offset)
     total = count_repositories_by_user(session, current_user.id)
     return RepositoryListResponse(
-        items=[RepositoryResponse.model_validate(repo) for repo in repositories],
+        items=[
+            RepositoryResponse(
+                id=repo.id,
+                name=repo.name,
+                source_type=repo.source_type,
+                source_ref=repo.source_ref,
+                last_scan_status=last_scan_status,
+            )
+            for repo, last_scan_status in repositories
+        ],
         total=total,
     )
 

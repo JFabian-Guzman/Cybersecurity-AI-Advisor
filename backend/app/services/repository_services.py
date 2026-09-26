@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import uuid
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import Repository
+from app.models import Repository, Scan
 from app.schemas.repository import RepositoryCreate
 
 
@@ -29,9 +30,21 @@ def create_repository(db: Session, repository: RepositoryCreate) -> Repository:
     return db_repository
 
 
-def get_repositories_by_user(db: Session, user_id: uuid.UUID, limit: int, offset: int) -> list[Repository]:
+def get_repositories_by_user(
+    db: Session, user_id: uuid.UUID, limit: int, offset: int
+) -> list[tuple[Repository, str | None]]:
+    latest_scan_rank = select(
+        Scan.repository_id,
+        Scan.status,
+        func.row_number().over(partition_by=Scan.repository_id, order_by=Scan.created_at.desc()).label("rn"),
+    ).subquery()
+    latest_scan = (
+        select(latest_scan_rank.c.repository_id, latest_scan_rank.c.status).where(latest_scan_rank.c.rn == 1).subquery()
+    )
+
     return (
-        db.query(Repository)
+        db.query(Repository, latest_scan.c.status)
+        .outerjoin(latest_scan, latest_scan.c.repository_id == Repository.id)
         .filter(Repository.user_id == user_id)
         .order_by(Repository.id)
         .offset(offset)

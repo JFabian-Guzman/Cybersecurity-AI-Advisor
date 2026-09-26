@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../lib/api-client'
 import type { Scan } from './get-scan'
 
@@ -8,10 +8,15 @@ export async function createScan(repositoryId: string): Promise<Scan> {
 }
 
 export function useCreateScanMutation() {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: async (repositoryId: string) => {
       const scan = await createScan(repositoryId)
       return scan
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['repositories'] })
     },
   })
 }

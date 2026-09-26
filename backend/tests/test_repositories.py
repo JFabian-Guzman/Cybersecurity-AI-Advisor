@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
+from app.db.db import engine
 from app.main import app
+from app.models import Repository, Scan
+from app.services.user_services import STUB_USER_ID
 
 client = TestClient(app)
 
@@ -59,6 +64,49 @@ def test_connect_repository_invalid_url() -> None:
 def test_get_scan_not_found() -> None:
     response = client.get("/api/scans/00000000-0000-0000-0000-000000000999")
     assert response.status_code == 404
+
+
+def test_list_repositories_includes_last_scan_status() -> None:
+    no_scan_url = f"https://github.com/example/no-scan-repo-{uuid.uuid4()}"
+    no_scan_repo = client.post("/api/repositories", json={"url": no_scan_url, "name": "no-scan-repo"}).json()
+
+    with Session(engine) as session:
+        scanned_repo = Repository(
+            user_id=STUB_USER_ID,
+            name="scanned-repo",
+            source_type="git_url",
+            source_ref=f"https://github.com/example/scanned-repo-{uuid.uuid4()}",
+        )
+        session.add(scanned_repo)
+        session.flush()
+
+        now = datetime.now(UTC)
+        session.add_all(
+            [
+                Scan(repository_id=scanned_repo.id, user_id=STUB_USER_ID, status="failed", created_at=now),
+                Scan(
+                    repository_id=scanned_repo.id,
+                    user_id=STUB_USER_ID,
+                    status="succeeded",
+                    created_at=now + timedelta(seconds=1),
+                ),
+            ]
+        )
+        session.commit()
+        scanned_repo_id = str(scanned_repo.id)
+
+    target_ids = {no_scan_repo["id"], scanned_repo_id}
+    listed: dict[str, str | None] = {}
+    offset = 0
+    while not target_ids.issubset(listed):
+        page = client.get("/api/repositories", params={"limit": 100, "offset": offset}).json()
+        if not page["items"]:
+            break
+        listed.update({item["id"]: item["last_scan_status"] for item in page["items"]})
+        offset += 100
+
+    assert listed[no_scan_repo["id"]] is None
+    assert listed[scanned_repo_id] == "succeeded"
 
 
 def test_list_repositories_paginates_with_limit_and_offset() -> None:
