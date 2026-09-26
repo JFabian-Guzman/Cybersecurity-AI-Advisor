@@ -27,5 +27,11 @@ class ScanResponse(BaseModel):
     error: str | None
     started_at: datetime | None
     finished_at: datetime | None
+    created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class ScanListResponse(BaseModel):
+    items: list[ScanResponse]
+    total: int

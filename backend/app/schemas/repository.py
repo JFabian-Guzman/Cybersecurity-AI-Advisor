@@ -22,6 +22,7 @@ class RepositoryResponse(BaseModel):
     name: str
     source_type: str
     source_ref: str
+    last_scan_status: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -32,3 +33,8 @@ class RepositoryListItem(BaseModel):
     source_type: str
 
     model_config = {"from_attributes": True}
+
+
+class RepositoryListResponse(BaseModel):
+    items: list[RepositoryResponse]
+    total: int

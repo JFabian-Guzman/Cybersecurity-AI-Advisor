@@ -27,6 +27,7 @@ def to_scan_response(scan: Scan) -> ScanResponse:
         error=scan.error,
         started_at=scan.started_at,
         finished_at=scan.finished_at,
+        created_at=scan.created_at,
     )
 
 
@@ -35,6 +36,23 @@ def get_scan(db: Session, scan_id: uuid.UUID, user_id: uuid.UUID | None = None) 
     if user_id is not None:
         query = query.filter(Scan.user_id == user_id)
     return query.first()
+
+
+def get_scans_by_repository(
+    db: Session, repository_id: uuid.UUID, user_id: uuid.UUID, limit: int, offset: int
+) -> list[Scan]:
+    return (
+        db.query(Scan)
+        .filter(Scan.repository_id == repository_id, Scan.user_id == user_id)
+        .order_by(Scan.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+def count_scans_by_repository(db: Session, repository_id: uuid.UUID, user_id: uuid.UUID) -> int:
+    return db.query(Scan).filter(Scan.repository_id == repository_id, Scan.user_id == user_id).count()
 
 
 def update_scan(db: Session, scan_id: uuid.UUID, updates: ScanUpdate) -> Scan | None:
