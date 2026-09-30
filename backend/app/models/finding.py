@@ -22,7 +22,8 @@ class Finding(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     rule_id: Mapped[str] = mapped_column(String(64), nullable=False)
     severity: Mapped[str] = mapped_column(
-        Enum("critical", "high", "medium", "low", "info", name="severity_enum"), nullable=False
+        Enum("critical", "high", "medium", "low", "info", name="severity_enum"),
+        nullable=False,
     )
     file_path: Mapped[str] = mapped_column(Text, nullable=False)
     line_number: Mapped[int | None] = mapped_column(Integer, nullable=True)

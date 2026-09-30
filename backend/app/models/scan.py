@@ -24,7 +24,9 @@ class Scan(Base):
     repository_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("repositories.id"), nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     status: Mapped[str] = mapped_column(
-        Enum("queued", "running", "succeeded", "failed", name="scan_status_enum"), nullable=False, default="queued"
+        Enum("queued", "running", "succeeded", "failed", name="scan_status_enum"),
+        nullable=False,
+        default="queued",
     )
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

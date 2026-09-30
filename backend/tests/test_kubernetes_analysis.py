@@ -62,7 +62,10 @@ def _write_manifest(tmp_path: Path, content: str, name: str = "deployment.yaml")
     return str(tmp_path)
 
 
-def _deployment(security_context: str = _COMPLIANT_SECURITY_CONTEXT, resources: str = _COMPLIANT_RESOURCES) -> str:
+def _deployment(
+    security_context: str = _COMPLIANT_SECURITY_CONTEXT,
+    resources: str = _COMPLIANT_RESOURCES,
+) -> str:
     return _BASE_DEPLOYMENT.format(security_context=security_context, resources=resources)
 
 

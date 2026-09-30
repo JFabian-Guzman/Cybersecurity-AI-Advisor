@@ -87,4 +87,10 @@ def test_generate_report_with_no_findings() -> None:
         report = session.query(Report).filter(Report.scan_id == scan_id).one()
         assert report.total_findings == 0
         assert report.rule_counts == {}
-        assert report.severity_counts == {"critical": 0, "high": 0, "medium": 0, "low": 0, "info": 0}
+        assert report.severity_counts == {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "info": 0,
+        }

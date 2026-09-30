@@ -8,7 +8,12 @@ from fastapi.testclient import TestClient
 import app.jobs as jobs
 from app.main import app
 from app.models import Report
-from app.reporting.export import ExportDocument, build_export_document, render_markdown, render_pdf
+from app.reporting.export import (
+    ExportDocument,
+    build_export_document,
+    render_markdown,
+    render_pdf,
+)
 from app.services.user_services import STUB_USER_ID
 from tests.conftest import create_scan
 
@@ -181,7 +186,9 @@ def _run_scan_with_monkeypatch(scan_id: uuid.UUID, monkeypatch: pytest.MonkeyPat
     jobs.run_scan(scan_id)
 
 
-def test_export_markdown_returns_200_with_attachment(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_export_markdown_returns_200_with_attachment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     scan_id = create_scan()
     _run_scan_with_monkeypatch(scan_id, monkeypatch)
 
@@ -227,7 +234,9 @@ def test_export_returns_422_for_invalid_format(monkeypatch: pytest.MonkeyPatch) 
 # ---------------------------------------------------------------------------
 
 
-def test_export_pdf_returns_200_with_attachment(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_export_pdf_returns_200_with_attachment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     scan_id = create_scan()
     _run_scan_with_monkeypatch(scan_id, monkeypatch)
 

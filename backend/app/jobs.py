@@ -12,10 +12,12 @@ import structlog
 from docker.errors import DockerException
 
 from app.db.db import SessionLocal
+from app.ingestion.classify import inspect_repo
 from app.ingestion.clone import clone_repo
 from app.models import Finding
 from app.reporting.generate import generate_report
 from app.schemas.scan import ScanUpdate
+from app.services.chunk_services import chunk_scan_files
 from app.services.findings_services import create_finding
 from app.services.scan_services import get_scan, update_scan
 
@@ -70,6 +72,23 @@ def _run_sandbox(repo_path: str, analyzers: list[str]) -> list[dict]:
                 pass
 
 
+def _collect_text_files(repo_path: str) -> list[tuple[str, str]]:
+    """Return (relative_path, content) pairs for all non-unknown files in the repo."""
+    manifest = inspect_repo(repo_path)
+    result: list[tuple[str, str]] = []
+    for entry in manifest.files:
+        if entry.category == "unknown":
+            continue
+        full_path = os.path.join(repo_path, entry.path)
+        try:
+            with open(full_path, encoding="utf-8", errors="replace") as fh:
+                content = fh.read()
+        except OSError:
+            continue
+        result.append((entry.path, content))
+    return result
+
+
 def run_scan(scan_id: uuid.UUID) -> None:
     with SessionLocal() as session:
         scan = get_scan(session, scan_id)
@@ -106,6 +125,13 @@ def run_scan(scan_id: uuid.UUID) -> None:
                 )
 
             generate_report(session, scan_id, scan.user_id)
+
+            try:
+                text_files = _collect_text_files(tmp_dir)
+                chunk_count = chunk_scan_files(session, scan.id, scan.user_id, text_files)
+                log.info("job.chunking_done", scan_id=str(scan_id), chunks=chunk_count)
+            except Exception as chunk_exc:
+                log.warning("job.chunking_failed", scan_id=str(scan_id), error=str(chunk_exc))
 
             update_scan(session, scan_id, ScanUpdate(status="succeeded", finished_at=datetime.now(UTC)))
             log.info("job.scan_succeeded", scan_id=str(scan_id), findings=len(raw_findings))

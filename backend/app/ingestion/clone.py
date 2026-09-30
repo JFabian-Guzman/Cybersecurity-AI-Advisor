@@ -28,7 +28,15 @@ def clone_repo(url: str, dest_dir: str, timeout_seconds: int, max_clone_mb: int)
             text=True,
         )
         subprocess.run(
-            ["git", "-C", dest_dir, "-c", "core.hooksPath=/dev/null", "checkout", "HEAD"],
+            [
+                "git",
+                "-C",
+                dest_dir,
+                "-c",
+                "core.hooksPath=/dev/null",
+                "checkout",
+                "HEAD",
+            ],
             env=env,
             timeout=timeout_seconds,
             check=True,

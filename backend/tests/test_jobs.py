@@ -11,7 +11,9 @@ from app.models import Scan
 from tests.conftest import create_scan
 
 
-def test_run_scan_always_requests_all_analyzers(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_run_scan_always_requests_all_analyzers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Regression test for K8s findings never showing up in reports: jobs.run_scan used to
     gate which sandbox analyzers ran on ingestion/classify.py's pre-clone heuristic, which
     silently missed common layouts (e.g. a multi-document YAML with a non-workload document
@@ -61,7 +63,9 @@ def test_run_scan_always_requests_all_analyzers(monkeypatch: pytest.MonkeyPatch)
         assert scan.status == "succeeded"
 
 
-def test_run_scan_records_started_and_finished_timestamps(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_run_scan_records_started_and_finished_timestamps(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Regression test: run_scan flipped the status to "running" without ever writing
     scan.started_at, so ScanResponse.started_at was always null even on succeeded scans
     (finished_at was written correctly, which made the gap easy to miss). The scan history
@@ -89,7 +93,9 @@ def test_run_scan_records_started_and_finished_timestamps(monkeypatch: pytest.Mo
         assert scan.started_at <= scan.finished_at
 
 
-def test_run_scan_records_started_at_even_when_the_scan_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_run_scan_records_started_at_even_when_the_scan_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A failed scan still needs a start timestamp: the error state in the UI shows when the
     run began. started_at is committed before the work that can raise, so the rollback in
     run_scan's except branch does not undo it."""

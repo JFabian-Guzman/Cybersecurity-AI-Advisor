@@ -9,7 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
 from app.models import User
-from app.schemas.repository import GitUrlRequest, RepositoryCreate, RepositoryListResponse, RepositoryResponse
+from app.schemas.repository import (
+    GitUrlRequest,
+    RepositoryCreate,
+    RepositoryListResponse,
+    RepositoryResponse,
+)
 from app.schemas.scan import ScanListResponse
 from app.services.repository_services import (
     count_repositories_by_user,
@@ -18,7 +23,11 @@ from app.services.repository_services import (
     get_repository,
     get_repository_by_id,
 )
-from app.services.scan_services import count_scans_by_repository, get_scans_by_repository, to_scan_response
+from app.services.scan_services import (
+    count_scans_by_repository,
+    get_scans_by_repository,
+    to_scan_response,
+)
 from app.services.user_services import get_current_user
 
 log = structlog.get_logger()

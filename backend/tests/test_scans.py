@@ -89,7 +89,9 @@ def test_create_scan_foreign_repository_is_not_found() -> None:
     assert response.status_code == 404
 
 
-def test_create_scan_marks_failed_when_enqueue_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_create_scan_marks_failed_when_enqueue_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     connect_response = client.post(
         "/api/repositories",
         json={"url": "https://github.com/example/repo", "name": "test-repo"},
@@ -109,7 +111,9 @@ def test_create_scan_marks_failed_when_enqueue_fails(monkeypatch: pytest.MonkeyP
     assert fetched.json()["status"] == "failed"
 
 
-def test_retry_scan_marks_failed_when_enqueue_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_retry_scan_marks_failed_when_enqueue_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     scan_id = _create_scan()
     with Session(engine) as session:
         scan = session.get(Scan, uuid.UUID(scan_id))
