@@ -1,4 +1,4 @@
-import { Info, RotateCwIcon } from 'lucide-react'
+import { Info, RotateCwIcon, Trash2Icon } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -29,6 +29,7 @@ interface RepositoriesTableProps {
   onPageChange: (page: number) => void
   onRetry: (repository: Repository) => void
   onViewDetails: (repository: Repository) => void
+  onDisconnect: (repository: Repository) => void
 }
 
 export function RepositoriesTable({
@@ -40,6 +41,7 @@ export function RepositoriesTable({
   onPageChange,
   onRetry,
   onViewDetails,
+  onDisconnect,
 }: RepositoriesTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
@@ -98,6 +100,21 @@ export function RepositoriesTable({
                         onClick={() => onViewDetails(repository)}
                       >
                         <Info className="size-5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Disconnect repository"
+                        title={
+                          isScanning
+                            ? 'Cannot disconnect while a scan is in progress'
+                            : 'Disconnect repository'
+                        }
+                        disabled={isScanning}
+                        className="hover:text-destructive"
+                        onClick={() => onDisconnect(repository)}
+                      >
+                        <Trash2Icon className="size-5" />
                       </Button>
                     </div>
                   </TableCell>
