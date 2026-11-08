@@ -17,3 +17,4 @@ that supersedes the old one rather than editing history.
 - [0002 - Sandbox isolation mechanism](0002-sandbox-isolation-mechanism.md)
 - [0003 - Chunking in worker](0003-chunking-in-worker.md)
 - [0004 - Branching strategy](0004-branching-strategy.md)
+- [0005 - Embedding provider and embedding job](0005-embedding-provider.md)
