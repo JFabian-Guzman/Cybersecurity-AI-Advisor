@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Repository, Scan
@@ -28,6 +28,13 @@ def create_repository(db: Session, repository: RepositoryCreate) -> Repository:
     db.commit()
     db.refresh(db_repository)
     return db_repository
+
+
+def delete_repository(db: Session, repository_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    # A Core DELETE lets the database's ON DELETE CASCADE remove scans, findings, reports and chunks
+    # in one statement; an ORM delete would try to null out the non-nullable scans.repository_id.
+    db.execute(delete(Repository).where(Repository.id == repository_id, Repository.user_id == user_id))
+    db.commit()
 
 
 def get_repositories_by_user(

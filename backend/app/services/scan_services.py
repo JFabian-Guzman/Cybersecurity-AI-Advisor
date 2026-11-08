@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from app.models import Scan
 from app.schemas.scan import ScanCreate, ScanResponse, ScanUpdate
 
+ACTIVE_SCAN_STATUSES = ("queued", "running")
+
 
 def create_scan(db: Session, scan: ScanCreate) -> Scan:
     db_scan = Scan(
@@ -53,6 +55,19 @@ def get_scans_by_repository(
 
 def count_scans_by_repository(db: Session, repository_id: uuid.UUID, user_id: uuid.UUID) -> int:
     return db.query(Scan).filter(Scan.repository_id == repository_id, Scan.user_id == user_id).count()
+
+
+def has_active_scan(db: Session, repository_id: uuid.UUID, user_id: uuid.UUID) -> bool:
+    active_scan = (
+        db.query(Scan.id)
+        .filter(
+            Scan.repository_id == repository_id,
+            Scan.user_id == user_id,
+            Scan.status.in_(ACTIVE_SCAN_STATUSES),
+        )
+        .first()
+    )
+    return active_scan is not None
 
 
 def update_scan(db: Session, scan_id: uuid.UUID, updates: ScanUpdate) -> Scan | None:

@@ -4,7 +4,7 @@ import uuid
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_db
@@ -19,6 +19,7 @@ from app.schemas.scan import ScanListResponse
 from app.services.repository_services import (
     count_repositories_by_user,
     create_repository,
+    delete_repository,
     get_repositories_by_user,
     get_repository,
     get_repository_by_id,
@@ -26,6 +27,7 @@ from app.services.repository_services import (
 from app.services.scan_services import (
     count_scans_by_repository,
     get_scans_by_repository,
+    has_active_scan,
     to_scan_response,
 )
 from app.services.user_services import get_current_user
@@ -81,6 +83,27 @@ def list_repositories(
         ],
         total=total,
     )
+
+
+@router.delete("/{repository_id}", status_code=204)
+def disconnect_repository(
+    repository_id: uuid.UUID,
+    session: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> Response:
+    repository = get_repository_by_id(session, repository_id, current_user.id)
+    if repository is None:
+        raise HTTPException(status_code=404, detail="Repository not found")
+
+    if has_active_scan(session, repository_id, current_user.id):
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot disconnect a repository while one of its scans is queued or running",
+        )
+
+    delete_repository(session, repository_id, current_user.id)
+    log.info("repository.disconnected", repo_id=str(repository_id))
+    return Response(status_code=204)
 
 
 @router.get("/{repository_id}/scans", response_model=ScanListResponse)
