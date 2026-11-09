@@ -98,6 +98,7 @@ dependencies = [
     { name = "alembic" },
     { name = "docker" },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "pgvector" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dotenv" },
@@ -113,7 +114,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "black" },
-    { name = "httpx" },
     { name = "mypy" },
     { name = "poethepoet" },
     { name = "pypdf" },
@@ -130,6 +130,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.18.4" },
     { name = "docker", specifier = ">=7.1.0" },
     { name = "fastapi", specifier = ">=0.137.2" },
+    { name = "httpx", specifier = ">=0.28.0" },
     { name = "pgvector", specifier = ">=0.4.2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.4" },
     { name = "python-dotenv", specifier = ">=1.2.2" },
@@ -145,7 +146,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "black", specifier = ">=25.1.0" },
-    { name = "httpx", specifier = ">=0.28.0" },
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "poethepoet", specifier = ">=0.48.0" },
     { name = "pypdf", specifier = ">=6.19.0" },
