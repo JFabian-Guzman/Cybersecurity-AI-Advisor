@@ -6,12 +6,15 @@ import { useCreateScanMutation } from '../api/create-scan'
 import { getErrorMessage } from '@/lib/errors'
 import { RepositoriesTable } from './RepositoriesTable'
 import { RepositoryScansModal } from './RepositoryScansModal'
+import { DisconnectRepositoryDialog } from './DisconnectRepositoryDialog'
 import { useRepositoryByUserQuery } from '../api/get-repositories-by-user'
 import type { Repository } from '../types/repository'
 
 interface ConnectRepositoryFormProps {
   onConnected: (scanId: string, repositoryName: string) => void
 }
+
+const PAGE_SIZE = 5
 
 export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProps) {
   const [url, setUrl] = useState('')
@@ -39,8 +42,8 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
   }
 
   const [selectedRepository, setSelectedRepository] = useState<Repository | null>(null)
+  const [repositoryToDisconnect, setRepositoryToDisconnect] = useState<Repository | null>(null)
 
-  const PAGE_SIZE = 5
   const [page, setPage] = useState(1)
 
   const { data, isPending: isRepositoriesPending } = useRepositoryByUserQuery(
@@ -48,6 +51,12 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
     PAGE_SIZE,
     (page - 1) * PAGE_SIZE,
   )
+
+  const handleDisconnected = () => {
+    // Removing the only row on a later page would leave the user on an empty page.
+    const isLastItemOnPage = (data?.items.length ?? 0) === 1
+    if (isLastItemOnPage && page > 1) setPage(page - 1)
+  }
 
   return (
     <>
@@ -90,6 +99,7 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
         onPageChange={setPage}
         onRetry={handleRetry}
         onViewDetails={setSelectedRepository}
+        onDisconnect={setRepositoryToDisconnect}
       />
       <RepositoryScansModal
         repository={selectedRepository}
@@ -97,6 +107,14 @@ export function ConnectRepositoryForm({ onConnected }: ConnectRepositoryFormProp
         onOpenChange={(open) => {
           if (!open) setSelectedRepository(null)
         }}
+      />
+      <DisconnectRepositoryDialog
+        repository={repositoryToDisconnect}
+        open={!!repositoryToDisconnect}
+        onOpenChange={(open) => {
+          if (!open) setRepositoryToDisconnect(null)
+        }}
+        onDisconnected={handleDisconnected}
       />
     </>
   )
