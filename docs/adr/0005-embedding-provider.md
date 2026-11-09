@@ -1,6 +1,6 @@
 # 0005. Embedding provider and embedding job
 
-- Status: proposed
+- Status: approved
 - Date: 2026-11-08
 - Deciders: Andrés Víquez, Fabián Guzmán
 
