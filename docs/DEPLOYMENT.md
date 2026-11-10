@@ -11,6 +11,8 @@ deployed from version tags via `.github/workflows/deploy.yml`.
 3. During the create flow, Render prompts for the `sync: false` variables:
    - `FRONTEND_ORIGIN` = the frontend URL, e.g. `https://cybersec-frontend.onrender.com`
    - `VITE_API_URL` = the backend URL, e.g. `https://cybersec-backend.onrender.com`
+   - `GEMINI_API_KEY` = a Gemini API key from https://aistudio.google.com/apikey (see ADR-0005).
+     Never commit it; Render stores it as a secret.
    Render derives URLs from the service names, so these are predictable; confirm the
    exact URLs in the dashboard after the first deploy.
 4. In each service's Settings, copy its Deploy Hook URL.
@@ -38,4 +40,7 @@ pushes to `main` do not deploy.
 - Free Render services sleep when idle, so the first request after inactivity is slow.
 - pgvector is not needed yet; when embeddings land, run `CREATE EXTENSION vector;`
   against the database once.
+- The Gemini free tier may use submitted content to improve Google products. That is
+  acceptable while only public repositories are scanned; enable billing before private
+  repository support ships (ADR-0005).
 - To validate the blueprint before pushing: `render blueprints validate`.

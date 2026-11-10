@@ -52,6 +52,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
       RELOAD: "true"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -74,6 +75,7 @@ services:
       SANDBOX_IMAGE: cybersecurity-ai-advisor-sandbox
       SANDBOX_TIMEOUT_SECONDS: "120"
       SANDBOX_MAX_CLONE_MB: "500"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - ./backend:/app
       - backend_venv:/app/.venv
