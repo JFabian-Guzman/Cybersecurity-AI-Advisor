@@ -17,7 +17,7 @@ from app.ingestion.clone import clone_repo
 from app.models import Finding
 from app.reporting.generate import generate_report
 from app.schemas.scan import ScanUpdate
-from app.services.chunk_services import chunk_scan_files
+from app.services.chunk_services import chunk_scan_files, delete_superseded_chunks
 from app.services.findings_services import create_finding
 from app.services.scan_services import get_scan, update_scan
 
@@ -129,8 +129,18 @@ def run_scan(scan_id: uuid.UUID) -> None:
             try:
                 text_files = _collect_text_files(tmp_dir)
                 chunk_count = chunk_scan_files(session, scan.id, scan.user_id, text_files)
-                log.info("job.chunking_done", scan_id=str(scan_id), chunks=chunk_count)
+                superseded_count = delete_superseded_chunks(session, scan)
+                log.info(
+                    "job.chunking_done",
+                    scan_id=str(scan_id),
+                    chunks=chunk_count,
+                    superseded_chunks=superseded_count,
+                )
             except Exception as chunk_exc:
+                # Without the rollback, a database error here would leave the session unusable and
+                # the status update below would fail the scan. Rolling back also keeps the previous
+                # scan's chunks, since their delete never commits.
+                session.rollback()
                 log.warning("job.chunking_failed", scan_id=str(scan_id), error=str(chunk_exc))
 
             update_scan(session, scan_id, ScanUpdate(status="succeeded", finished_at=datetime.now(UTC)))
