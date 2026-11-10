@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
+from typing import Any, cast
 
+from sqlalchemy import delete, select
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
 from app.models.chunk import Chunk
-
-if TYPE_CHECKING:
-    pass
+from app.models.scan import Scan
 
 # ---------------------------------------------------------------------------
 # Chunking configuration
@@ -78,6 +78,28 @@ def chunk_scan_files(
 
     session.flush()
     return total
+
+
+def delete_superseded_chunks(session: Session, scan: Scan) -> int:
+    """Delete chunks from this repository's older scans; return how many were removed.
+
+    Only scans created before *scan* count as superseded, so an older scan that finishes late
+    never wipes a newer scan's chunks. The caller commits, so the delete lands atomically with
+    the scan being marked ``succeeded`` and is rolled back if that fails.
+    """
+    older_scan_ids = select(Scan.id).where(
+        Scan.repository_id == scan.repository_id,
+        Scan.user_id == scan.user_id,
+        Scan.id != scan.id,
+        Scan.created_at < scan.created_at,
+    )
+    statement = (
+        delete(Chunk)
+        .where(Chunk.user_id == scan.user_id, Chunk.scan_id.in_(older_scan_ids))
+        .execution_options(synchronize_session=False)
+    )
+    result = cast(CursorResult[Any], session.execute(statement))
+    return result.rowcount
 
 
 def get_chunks_by_scan_id(session: Session, scan_id: uuid.UUID, user_id: uuid.UUID) -> list[Chunk]:
